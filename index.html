@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="theme-color" content="#080c10"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Jejum"/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
+  <title>Jejum</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#080c10;--s1:#0f1419;--s2:#161d25;--s3:#1c2530;
+  --border:rgba(255,255,255,.06);
+  --accent:#4fffb0;--glow:rgba(79,255,176,.2);
+  --amber:#ffb347;--red:#ff6b6b;--blue:#7eb8ff;--purple:#b39dff;
+  --text:#eef0f2;--muted:#556070;--soft:#8899aa;--r:18px;--rs:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;overflow:hidden;user-select:none}
+body{display:flex;flex-direction:column;max-width:430px;margin:0 auto}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:998}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 18px 120px;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+header{padding:50px 20px 12px;display:flex;align-items:flex-end;justify-content:space-between}
+.logo{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;letter-spacing:-.5px}
+.logo em{font-style:italic;color:var(--accent)}
+.plan-chip{background:var(--s2);border:1px solid var(--border);border-radius:30px;padding:6px 14px;font-size:10px;letter-spacing:.12em;color:var(--soft)}
+.view{display:none}.view.active{display:block}
+.st{font-size:9px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase;margin:20px 0 10px}
+
+/* ── RING ── */
+.ring-wrap{display:flex;justify-content:center;padding:18px 0 20px}
+.ring-pos{position:relative;width:230px;height:230px}
+.ring-svg{width:230px;height:230px;transform:rotate(-90deg)}
+.r-bg{fill:none;stroke:var(--s2);stroke-width:9}
+.r-track{fill:none;stroke:var(--accent);stroke-width:9;stroke-linecap:round;stroke-dasharray:628;stroke-dashoffset:628;transition:stroke-dashoffset 1s linear;filter:drop-shadow(0 0 10px var(--glow))}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.t-time{font-size:42px;font-weight:300;letter-spacing:-2px;line-height:1}
+.t-rem{font-size:10px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase;margin-top:2px}
+.t-phase{font-size:11px;color:var(--accent);letter-spacing:.06em;margin-top:3px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+.r-track.pulsing{animation:pulse 3.5s ease-in-out infinite}
+
+/* ── STATS ── */
+.stats{display:flex;background:var(--s1);border:1px solid var(--border);border-radius:var(--r);margin-bottom:13px}
+.stat{flex:1;padding:12px 0;display:flex;flex-direction:column;align-items:center;gap:3px}
+.stat+.stat{border-left:1px solid var(--border)}
+.sv{font-size:17px;font-weight:600}.sk{font-size:9px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+
+/* ── ÚLTIMA REFEIÇÃO ── */
+.meal-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:15px;margin-bottom:0}
+.meal-card.active-meal{border-color:rgba(79,255,176,.25)}
+.meal-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.meal-time-big{font-size:28px;font-weight:300;letter-spacing:-1px;line-height:1}
+.meal-time-big span{font-size:11px;color:var(--muted);font-weight:400;letter-spacing:.05em;display:block;margin-top:3px}
+.meal-elapsed{text-align:right}
+.meal-elapsed-val{font-size:17px;font-weight:600;color:var(--accent)}
+.meal-elapsed-key{font-size:9px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-top:2px}
+.meal-input-row{display:flex;gap:8px;align-items:center}
+.meal-time-input{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;font-family:'Sora',sans-serif;font-size:15px;color:var(--text);outline:none;transition:.2s;-webkit-appearance:none;appearance:none}
+.meal-time-input:focus{border-color:rgba(79,255,176,.3);background:var(--s3)}
+.meal-btn-now{padding:10px 14px;background:var(--accent);color:#060a0e;border:none;border-radius:var(--rs);font-family:'Sora',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:.2s;letter-spacing:.04em}
+.meal-btn-now:active{transform:scale(.97)}
+.meal-btn-set{padding:10px 14px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);font-family:'Sora',sans-serif;font-size:11px;color:var(--soft);cursor:pointer;white-space:nowrap;transition:.2s}
+.meal-btn-set:active{transform:scale(.97)}
+.meal-info{margin-top:10px;padding:9px 12px;background:rgba(79,255,176,.05);border:1px solid rgba(79,255,176,.1);border-radius:var(--rs);font-size:11px;color:var(--soft);line-height:1.65}
+.meal-info strong{color:var(--accent)}
+.meal-start-btn{width:100%;margin-top:10px;padding:13px;background:rgba(79,255,176,.1);border:1px solid rgba(79,255,176,.22);border-radius:var(--r);font-family:'Sora',sans-serif;font-size:12px;color:var(--accent);cursor:pointer;letter-spacing:.08em;transition:.2s;font-weight:600}
+.meal-start-btn:active{transform:scale(.98)}
+
+/* ── BTNS ── */
+.btn{width:100%;padding:15px;border:none;border-radius:var(--r);font-family:'Sora',sans-serif;font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;cursor:pointer;transition:all .2s}
+.btn:active{transform:scale(.98)}
+.btn-go{background:var(--accent);color:#060a0e;box-shadow:0 0 28px var(--glow)}
+.btn-stop{background:var(--s2);color:var(--red);border:1px solid rgba(255,107,107,.2)}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.btn-skip{padding:12px;background:var(--s2);border:1px solid rgba(255,107,107,.15);border-radius:var(--r);font-family:'Sora',sans-serif;font-size:11px;letter-spacing:.12em;color:var(--red);cursor:pointer;text-transform:uppercase;font-weight:600;transition:.2s}
+.btn-skip:active{transform:scale(.97)}
+
+/* ── FALHA MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);z-index:500;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .3s}
+.modal-bg.open{opacity:1;pointer-events:all}
+.modal{background:var(--s1);border:1px solid var(--border);border-radius:var(--r) var(--r) 0 0;padding:22px 20px 42px;width:100%;transform:translateY(100%);transition:transform .32s cubic-bezier(.32,.72,0,1)}
+.modal-bg.open .modal{transform:translateY(0)}
+.modal-handle{width:34px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px}
+.modal-title{font-family:'Playfair Display',serif;font-size:20px;margin-bottom:4px}
+.modal-sub{font-size:11px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+.motivo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.motivo-btn{padding:12px 10px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);font-family:'Sora',sans-serif;font-size:11px;color:var(--soft);cursor:pointer;text-align:center;transition:.2s;line-height:1.4}
+.motivo-btn:active,.motivo-btn.sel{border-color:var(--accent);background:rgba(79,255,176,.08);color:var(--accent)}
+.modal-confirm{width:100%;padding:14px;background:var(--accent);color:#060a0e;border:none;border-radius:var(--r);font-family:'Sora',sans-serif;font-size:12px;letter-spacing:.14em;font-weight:600;cursor:pointer;text-transform:uppercase;transition:.2s;margin-top:4px}
+.modal-confirm:active{transform:scale(.98)}
+.modal-confirm:disabled{opacity:.4;pointer-events:none}
+
+/* ── ADAPTAÇÃO ── */
+.adapt-card{border-radius:var(--r);padding:15px;margin-bottom:0;position:relative;overflow:hidden}
+.adapt-card.warn{background:rgba(255,179,71,.07);border:1px solid rgba(255,179,71,.22)}
+.adapt-card.ok{background:rgba(79,255,176,.06);border:1px solid rgba(79,255,176,.18)}
+.adapt-card.alert{background:rgba(255,107,107,.07);border:1px solid rgba(255,107,107,.2)}
+.adapt-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.adapt-icon{font-size:18px}
+.adapt-title{font-size:11px;font-weight:600;letter-spacing:.06em}
+.adapt-card.warn .adapt-title{color:var(--amber)}
+.adapt-card.ok .adapt-title{color:var(--accent)}
+.adapt-card.alert .adapt-title{color:var(--red)}
+.adapt-body{font-size:11px;color:var(--soft);line-height:1.7}
+.adapt-body strong{color:var(--text)}
+.adapt-action{margin-top:10px;padding:9px 14px;border:none;border-radius:var(--rs);font-family:'Sora',sans-serif;font-size:11px;cursor:pointer;font-weight:600;transition:.2s;letter-spacing:.06em}
+.adapt-card.warn .adapt-action{background:rgba(255,179,71,.15);color:var(--amber)}
+.adapt-card.ok .adapt-action{background:rgba(79,255,176,.12);color:var(--accent)}
+.adapt-card.alert .adapt-action{background:rgba(255,107,107,.12);color:var(--red)}
+.adapt-action:active{transform:scale(.97)}
+
+/* ── ADESÃO CALENDAR ── */
+.adherence-row{display:flex;gap:5px;margin-bottom:4px}
+.adh-day{flex:1;height:32px;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:8px;letter-spacing:.06em;text-transform:uppercase}
+.adh-day.completo{background:rgba(79,255,176,.15);color:var(--accent)}
+.adh-day.parcial{background:rgba(255,179,71,.12);color:var(--amber)}
+.adh-day.falhado{background:rgba(255,107,107,.1);color:var(--red)}
+.adh-day.vazio{background:var(--s2);color:var(--muted)}
+.adh-day .adh-icon{font-size:12px}
+
+/* ── LEMBRETE ── */
+.reminder-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:15px}
+.reminder-row{display:flex;align-items:center;justify-content:space-between}
+.reminder-label{font-size:12px;color:var(--text);line-height:1.4}
+.reminder-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.toggle-wrap{position:relative;width:42px;height:24px;flex-shrink:0}
+.toggle-input{opacity:0;width:0;height:0;position:absolute}
+.toggle-slider{position:absolute;inset:0;background:var(--s3);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:.25s}
+.toggle-slider::before{content:'';position:absolute;height:18px;width:18px;left:2px;top:2px;background:var(--muted);border-radius:50%;transition:.25s}
+.toggle-input:checked+.toggle-slider{background:rgba(79,255,176,.18);border-color:rgba(79,255,176,.4)}
+.toggle-input:checked+.toggle-slider::before{transform:translateX(18px);background:var(--accent)}
+.reminder-time-row{display:flex;gap:8px;align-items:center;margin-top:13px;padding-top:13px;border-top:1px solid var(--border)}
+.reminder-time-label{font-size:11px;color:var(--muted)}
+.reminder-selects{display:flex;gap:6px;align-items:center;margin-left:auto}
+.reminder-select{background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:8px 10px;font-family:'Sora',sans-serif;font-size:15px;color:var(--text);outline:none;-webkit-appearance:none;appearance:none;cursor:pointer;min-width:56px;text-align:center}
+.reminder-sep{font-size:18px;color:var(--muted);font-weight:300}
+
+/* ── PLANOS ── */
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pc{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:13px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.pc:active{transform:scale(.97)}
+.pc.sel{border-color:var(--accent);background:rgba(79,255,176,.07)}
+.pc.sel::after{content:'';position:absolute;top:0;right:0;border-style:solid;border-width:0 16px 16px 0;border-color:transparent var(--accent) transparent transparent}
+.pn{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;line-height:1}
+.pc.sel .pn{color:var(--accent)}
+.pd{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.4}
+.ptag{display:inline-block;margin-top:6px;padding:3px 7px;border-radius:20px;font-size:9px;background:rgba(79,255,176,.1);color:var(--accent)}
+
+/* ── HISTORIAL ── */
+.hist{display:flex;flex-direction:column;gap:6px}
+.hi{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:11px 14px;display:flex;justify-content:space-between;align-items:center}
+.hd{font-size:11px;color:var(--soft)}.hv{font-size:13px;margin-top:2px}.hp{font-size:9px;color:var(--muted)}
+.empty{text-align:center;padding:20px;color:var(--muted);font-size:11px;line-height:2}
+
+/* ── PESO ── */
+.weight-bar{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:0}
+.wb-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px}
+.wb-main{font-size:30px;font-weight:300;letter-spacing:-1px}
+.wb-main span{font-size:12px;color:var(--muted);font-weight:400}
+.wb-imc{text-align:right}
+.imc-val{font-size:20px;font-weight:600}
+.imc-label{font-size:9px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-top:1px}
+.weight-graph{height:48px;display:flex;align-items:flex-end;gap:4px;margin-bottom:10px}
+.wbar{flex:1;border-radius:3px 3px 0 0;min-height:4px;transition:.4s;cursor:pointer;position:relative}
+.wbar-tip{position:absolute;bottom:calc(100%+4px);left:50%;transform:translateX(-50%);background:var(--s3);border:1px solid var(--border);border-radius:6px;padding:3px 7px;font-size:9px;white-space:nowrap;opacity:0;transition:.2s;pointer-events:none}
+.wbar:hover .wbar-tip{opacity:1}
+.wb-input-row{display:flex;gap:8px;margin-top:12px}
+.wb-input{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;font-family:'Sora',sans-serif;font-size:14px;color:var(--text);outline:none;transition:.2s}
+.wb-input:focus{border-color:rgba(79,255,176,.3)}
+.wb-add{padding:10px 14px;background:var(--accent);color:#060a0e;border:none;border-radius:var(--rs);font-family:'Sora',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:.2s}
+.wb-add:active{transform:scale(.97)}
+.imc-bar{height:5px;border-radius:3px;background:linear-gradient(to right,var(--blue) 0%,var(--accent) 30%,var(--amber) 65%,var(--red) 100%);margin-top:9px;position:relative}
+.imc-marker{position:absolute;top:-4px;width:12px;height:12px;border-radius:50%;background:var(--text);border:2px solid var(--bg);transform:translateX(-50%);transition:.5s}
+.computed-row{display:flex;gap:7px;margin-top:10px}
+.computed-pill{flex:1;background:rgba(79,255,176,.06);border:1px solid rgba(79,255,176,.14);border-radius:var(--rs);padding:8px 6px;text-align:center}
+.cp-val{font-size:14px;font-weight:600;color:var(--accent)}
+.cp-key{font-size:8px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-top:2px}
+
+/* ── PERFIL ── */
+.pcard{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px}
+.pcard-title{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);margin-bottom:13px;display:flex;align-items:center;gap:7px}
+.pcard-title::before{content:'';display:block;width:3px;height:13px;background:var(--accent);border-radius:2px}
+.field{margin-bottom:12px}.field:last-child{margin-bottom:0}
+.field label{font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;font-family:'Sora',sans-serif;font-size:12px;color:var(--text);outline:none;transition:.2s;-webkit-appearance:none;appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:rgba(79,255,176,.3);background:var(--s3)}
+.field textarea{resize:none;height:66px;line-height:1.5}
+.field select option{background:var(--s2)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.days-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.day-btn{padding:7px 0;background:var(--s2);border:1px solid var(--border);border-radius:8px;font-size:10px;color:var(--muted);cursor:pointer;text-align:center;transition:.2s}
+.day-btn.on{background:rgba(79,255,176,.12);border-color:rgba(79,255,176,.35);color:var(--accent);font-weight:600}
+.save-btn{width:100%;padding:14px;background:var(--accent);color:#060a0e;border:none;border-radius:var(--r);font-family:'Sora',sans-serif;font-size:12px;letter-spacing:.13em;font-weight:600;cursor:pointer;text-transform:uppercase;margin-top:13px;transition:.2s}
+.save-btn:active{transform:scale(.98)}
+.profile-saved{display:none;text-align:center;padding:7px;font-size:11px;color:var(--accent)}
+.data-btn-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:0}
+.data-btn{padding:12px;border:none;border-radius:var(--rs);font-family:'Sora',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:.2s;letter-spacing:.06em;text-align:center}
+.data-btn-export{background:rgba(79,255,176,.1);border:1px solid rgba(79,255,176,.2);color:var(--accent)}
+.data-btn-import{background:var(--s2);border:1px solid var(--border);color:var(--soft)}
+.data-btn:active{transform:scale(.97)}
+
+/* ── INFO ── */
+.info-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:17px;margin-bottom:10px}
+.ic-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;margin-bottom:3px}
+.ic-tag{display:inline-block;padding:3px 9px;border-radius:20px;font-size:9px;letter-spacing:.09em;text-transform:uppercase;background:rgba(79,255,176,.1);color:var(--accent);margin-bottom:9px}
+.ic-body{font-size:11px;color:var(--soft);line-height:1.8}
+.ic-body strong{color:var(--text)}
+.mechs{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+.mech{display:flex;gap:8px;font-size:11px;color:var(--soft);line-height:1.5}
+.mech-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);margin-top:5px;flex-shrink:0}
+.src{font-size:9px;color:var(--muted);margin-top:9px;font-style:italic}
+.disc{background:rgba(255,179,71,.05);border:1px solid rgba(255,179,71,.14);border-radius:12px;padding:10px 13px;margin-bottom:10px;font-size:10px;color:rgba(255,179,71,.8);line-height:1.6}
+
+/* ── NAV ── */
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(8,12,16,.94);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid var(--border);display:flex;padding:10px 0 26px;z-index:100}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;cursor:pointer;padding:7px;transition:.2s}
+.ni{font-size:18px;opacity:.28;transition:.2s}
+.nl{font-size:9px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;opacity:0;transition:.2s}
+.nb.active .ni{opacity:1}.nb.active .nl{opacity:1;color:var(--accent)}
+.toast{position:fixed;top:54px;left:50%;transform:translateX(-50%) translateY(-14px);background:var(--s2);border:1px solid var(--border);border-radius:30px;padding:9px 20px;font-size:11px;color:var(--text);z-index:999;opacity:0;transition:.28s;white-space:nowrap;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── ONBOARDING ── */
+.onboard-bg{position:fixed;inset:0;background:var(--bg);z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;text-align:center;overflow-y:auto}
+.onboard-logo{font-family:'Playfair Display',serif;font-size:44px;font-weight:700;margin-bottom:10px}
+.onboard-logo em{font-style:italic;color:var(--accent)}
+.onboard-tagline{font-size:13px;color:var(--soft);line-height:1.7;margin-bottom:10px}
+.onboard-science{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:32px;max-width:300px}
+.onboard-step{font-size:9px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase;margin-bottom:14px}
+.onboard-plans{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;margin-bottom:20px}
+.onboard-pc{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:14px;cursor:pointer;transition:all .2s;text-align:left}
+.onboard-pc:active{transform:scale(.97)}
+.onboard-pc.sel{border-color:var(--accent);background:rgba(79,255,176,.07)}
+.onboard-pn{font-family:'Playfair Display',serif;font-size:20px;font-weight:700}
+.onboard-pc.sel .onboard-pn{color:var(--accent)}
+.onboard-pd{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.4}
+.onboard-btn{width:100%;padding:15px;background:var(--accent);color:#060a0e;border:none;border-radius:var(--r);font-family:'Sora',sans-serif;font-size:12px;letter-spacing:.16em;font-weight:600;cursor:pointer;transition:.2s;text-transform:uppercase;margin-bottom:14px}
+.onboard-btn:active{transform:scale(.98)}
+.onboard-btn:disabled{opacity:.35;pointer-events:none}
+.onboard-skip{font-size:11px;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+/* ── CELEBRAÇÃO ── */
+.celebration-bg{position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:600;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s}
+.celebration-bg.open{opacity:1;pointer-events:all}
+.celebration-card{background:var(--s1);border:1px solid rgba(79,255,176,.28);border-radius:var(--r);padding:32px 24px;text-align:center;max-width:340px;width:92%}
+@keyframes celebrate{0%{transform:scale(.8);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.celebration-bg.open .celebration-card{animation:celebrate .45s ease-out forwards}
+.celebration-icon{font-size:52px;margin-bottom:14px;display:block}
+.celebration-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;margin-bottom:5px}
+.celebration-sub{font-size:11px;color:var(--muted);margin-bottom:22px;line-height:1.7}
+.celebration-stats{display:flex;gap:10px;margin-bottom:22px}
+.celebration-stat{flex:1;background:rgba(79,255,176,.06);border:1px solid rgba(79,255,176,.12);border-radius:var(--rs);padding:11px 6px}
+.cs-val{font-size:20px;font-weight:600;color:var(--accent)}
+.cs-key{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:3px}
+.celebration-close{width:100%;padding:14px;background:var(--accent);color:#060a0e;border:none;border-radius:var(--r);font-family:'Sora',sans-serif;font-size:12px;letter-spacing:.14em;font-weight:600;cursor:pointer;transition:.2s}
+.celebration-close:active{transform:scale(.98)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Je<em>j</em>um</div>
+  <div class="plan-chip" id="chipLabel">16:8</div>
+</header>
+
+<div class="scroll">
+
+<!-- ══ TIMER ══ -->
+<div class="view active" id="vTimer">
+
+  <div class="ring-wrap">
+    <div class="ring-pos">
+      <svg class="ring-svg" viewBox="0 0 230 230">
+        <circle class="r-bg" cx="115" cy="115" r="100"/>
+        <circle class="r-track" id="rTrack" cx="115" cy="115" r="100"/>
+      </svg>
+      <div class="ring-center">
+        <div class="t-time"  id="tTime">00:00:00</div>
+        <div class="t-rem"   id="tRem">Pronto para jejuar</div>
+        <div class="t-phase" id="tPhase">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="sv" id="sN">0</div><div class="sk">Jejuns</div></div>
+    <div class="stat"><div class="sv" id="sH">0h</div><div class="sk">Total</div></div>
+    <div class="stat"><div class="sv" id="sS">0</div><div class="sk">Seguidos</div></div>
+    <div class="stat"><div class="sv" id="sA">—</div><div class="sk">Adesão</div></div>
+  </div>
+
+  <!-- ÚLTIMA REFEIÇÃO -->
+  <div class="st">Última refeição</div>
+  <div class="meal-card" id="mealCard">
+    <div class="meal-top" id="mealTopSection">
+      <div>
+        <div class="meal-time-big" id="mealTimeBig">—</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px" id="mealDateLabel">Não registada</div>
+      </div>
+      <div class="meal-elapsed" id="mealElapsedBlock" style="display:none">
+        <div class="meal-elapsed-val" id="mealElapsedVal">0h</div>
+        <div class="meal-elapsed-key">Decorrido</div>
+      </div>
+    </div>
+    <div class="meal-input-row">
+      <input type="time" id="mealTimeInput" class="meal-time-input"/>
+      <button class="meal-btn-set" onclick="logMeal()">Definir</button>
+      <button class="meal-btn-now" onclick="logMealNow()">Agora</button>
+    </div>
+    <div class="meal-info" id="mealInfoBox" style="display:none"></div>
+    <button class="meal-start-btn" id="mealStartBtn" style="display:none" onclick="startFastFromMeal()">
+      ▶ Iniciar jejum desde esta hora
+    </button>
+  </div>
+
+  <div style="height:13px"></div>
+  <button class="btn btn-go" id="actBtn" onclick="toggle()">Iniciar Jejum</button>
+  <div class="btn-row">
+    <button class="btn-skip" onclick="openFalhaModal('skip')">✕ Falhar hoje</button>
+    <button class="btn-skip" style="color:var(--amber);border-color:rgba(255,179,71,.2)" onclick="openFalhaModal('partial')">⚡ Jejum parcial</button>
+  </div>
+
+  <!-- ADAPTAÇÃO -->
+  <div class="st">Estado do plano</div>
+  <div id="adaptCard"></div>
+
+  <!-- ADESÃO ÚLTIMOS 7 DIAS -->
+  <div class="st">Últimos 7 dias</div>
+  <div class="adherence-row" id="adherenceRow"></div>
+
+  <!-- PLANO ACTIVO -->
+  <div class="st">Plano activo</div>
+  <div class="plans" id="planGrid"></div>
+
+  <!-- LEMBRETE -->
+  <div class="st">Lembrete diário</div>
+  <div class="reminder-card">
+    <div class="reminder-row">
+      <div>
+        <div class="reminder-label">Lembrete para jejum</div>
+        <div class="reminder-sub">Notificação diária à hora que escolheres</div>
+      </div>
+      <label class="toggle-wrap">
+        <input type="checkbox" class="toggle-input" id="reminderToggle" onchange="toggleReminder()"/>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="reminder-time-row" id="reminderTimeRow" style="display:none">
+      <div class="reminder-time-label">Notificar às</div>
+      <div class="reminder-selects">
+        <select class="reminder-select" id="reminderHour" onchange="saveReminder()"></select>
+        <span class="reminder-sep">:</span>
+        <select class="reminder-select" id="reminderMin" onchange="saveReminder()"></select>
+      </div>
+    </div>
+  </div>
+
+  <div class="st">Historial</div>
+  <div class="hist" id="hist"><div class="empty">Nenhum jejum registado<br>Inicia o teu primeiro jejum ↑</div></div>
+</div>
+
+<!-- ══ PERFIL ══ -->
+<div class="view" id="vPerfil">
+  <div class="st" style="margin-top:6px">Acompanhamento de peso</div>
+  <div class="weight-bar">
+    <div class="wb-top">
+      <div>
+        <div class="wb-main" id="wbMain">— <span>kg</span></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px" id="wbDelta">Sem registos</div>
+      </div>
+      <div class="wb-imc">
+        <div class="imc-val" id="imcVal" style="color:var(--soft)">—</div>
+        <div class="imc-label">IMC</div>
+      </div>
+    </div>
+    <div class="weight-graph" id="weightGraph"><div style="font-size:10px;color:var(--muted);align-self:center;width:100%;text-align:center">Regista o primeiro peso abaixo</div></div>
+    <div class="imc-bar"><div class="imc-marker" id="imcMarker" style="left:50%"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:3px">
+      <span>Baixo</span><span>Normal</span><span>Excesso</span><span>Obesidade</span>
+    </div>
+    <div id="computedRow" style="display:none" class="computed-row">
+      <div class="computed-pill"><div class="cp-val" id="cpIMC">—</div><div class="cp-key">IMC</div></div>
+      <div class="computed-pill"><div class="cp-val" id="cpPeso">—</div><div class="cp-key">Peso ideal</div></div>
+      <div class="computed-pill"><div class="cp-val" id="cpMeta">—</div><div class="cp-key">Meta</div></div>
+    </div>
+    <div class="wb-input-row">
+      <input class="wb-input" type="number" id="wInput" placeholder="ex: 82.5" step="0.1" min="30" max="250"/>
+      <button class="wb-add" onclick="addWeight()">+ Registar</button>
+    </div>
+  </div>
+
+  <div class="st">Dados pessoais</div>
+  <div class="pcard">
+    <div class="pcard-title">Corpo & Saúde</div>
+    <div class="field-row">
+      <div class="field"><label>Idade</label><input type="number" id="pAge" placeholder="47" min="18" max="90"/></div>
+      <div class="field"><label>Altura (cm)</label><input type="number" id="pHeight" placeholder="175" min="130" max="220" oninput="updateIMC()"/></div>
+    </div>
+    <div class="field"><label>Historial familiar de cancro</label>
+      <select id="pFamHist">
+        <option value="">Selecciona</option>
+        <option value="prostata-intestino">Próstata + Intestino / Colorectal</option>
+        <option value="prostata">Só próstata</option>
+        <option value="intestino">Só intestino / colorectal</option>
+        <option value="outro">Outro tipo</option>
+        <option value="nenhum">Nenhum conhecido</option>
+      </select>
+    </div>
+    <div class="field"><label>Condições de saúde</label>
+      <select id="pHealth">
+        <option value="">Nenhuma / Não quero indicar</option>
+        <option value="diabetes2">Diabetes tipo 2 ou pré-diabetes</option>
+        <option value="hipertensao">Hipertensão arterial</option>
+        <option value="colesterol">Colesterol / triglicéridos elevados</option>
+        <option value="refluxo">Refluxo gastroesofágico / gastrite</option>
+        <option value="tiroideia">Doença da tiroideia</option>
+        <option value="multiplas">Múltiplas condições</option>
+      </select>
+    </div>
+    <div class="field"><label>Medicação regular</label>
+      <select id="pMeds">
+        <option value="">Nenhuma</option>
+        <option value="manha">Tomo medicação de manhã</option>
+        <option value="refeicoes">Tomo medicação às refeições</option>
+        <option value="noite">Tomo medicação à noite</option>
+        <option value="variada">Horários variados</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="pcard">
+    <div class="pcard-title">Treino & Actividade</div>
+    <div class="field"><label>Dias de treino</label>
+      <div class="days-grid" id="daysGrid">
+        <div class="day-btn" data-d="0" onclick="toggleDay(this)">Dom</div>
+        <div class="day-btn" data-d="1" onclick="toggleDay(this)">Seg</div>
+        <div class="day-btn" data-d="2" onclick="toggleDay(this)">Ter</div>
+        <div class="day-btn" data-d="3" onclick="toggleDay(this)">Qua</div>
+        <div class="day-btn" data-d="4" onclick="toggleDay(this)">Qui</div>
+        <div class="day-btn" data-d="5" onclick="toggleDay(this)">Sex</div>
+        <div class="day-btn" data-d="6" onclick="toggleDay(this)">Sáb</div>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Horário</label>
+        <select id="pTrainTime">
+          <option value="">Selecciona</option>
+          <option value="manha-cedo">Manhã cedo (6h–8h)</option>
+          <option value="manha">Manhã (8h–10h)</option>
+          <option value="almoco">Hora de almoço (12h–14h)</option>
+          <option value="tarde">Tarde (15h–18h)</option>
+          <option value="noite">Noite (19h–21h)</option>
+          <option value="variavel">Variável</option>
+        </select>
+      </div>
+      <div class="field"><label>Tipo</label>
+        <select id="pTrainType">
+          <option value="">Selecciona</option>
+          <option value="forca">Musculação / Força</option>
+          <option value="cardio">Cardio</option>
+          <option value="misto">Misto</option>
+          <option value="yoga">Yoga / Mobilidade</option>
+          <option value="desporto">Desporto equipa</option>
+          <option value="leve">Caminhada / Leve</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>Intensidade habitual</label>
+      <select id="pIntensity">
+        <option value="">Selecciona</option>
+        <option value="leve">Leve — transpiro pouco</option>
+        <option value="moderada">Moderada — fico com fôlego curto</option>
+        <option value="intensa">Intensa — difícil conversar</option>
+        <option value="muito-intensa">Muito intensa — HIIT / competição</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="pcard">
+    <div class="pcard-title">Rotina & Bem-estar</div>
+    <div class="field-row">
+      <div class="field"><label>Hora de acordar</label>
+        <select id="pWake">
+          <option value="">Selecciona</option>
+          <option value="6">Antes das 6h</option>
+          <option value="7">~7h</option>
+          <option value="8">~8h</option>
+          <option value="9">~9h</option>
+          <option value="10">~10h ou mais</option>
+        </select>
+      </div>
+      <div class="field"><label>Hora de dormir</label>
+        <select id="pSleep">
+          <option value="">Selecciona</option>
+          <option value="21">Antes das 22h</option>
+          <option value="23">~23h</option>
+          <option value="0">Meia-noite</option>
+          <option value="1">~1h ou mais</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>Qualidade do sono</label>
+      <select id="pSleepQ">
+        <option value="">Selecciona</option>
+        <option value="boa">Boa — acordo descansado</option>
+        <option value="irregular">Irregular — varia muito</option>
+        <option value="ma">Má — acordo cansado com frequência</option>
+        <option value="insonia">Insónia ou acordar frequente</option>
+      </select>
+    </div>
+    <div class="field"><label>Nível de stress habitual</label>
+      <select id="pStress">
+        <option value="">Selecciona</option>
+        <option value="baixo">Baixo</option>
+        <option value="moderado">Moderado</option>
+        <option value="alto">Alto</option>
+        <option value="muito-alto">Muito alto / burnout</option>
+      </select>
+    </div>
+    <div class="field"><label>Padrão alimentar</label>
+      <select id="pDiet">
+        <option value="">Selecciona</option>
+        <option value="omnivoro">Omnívoro</option>
+        <option value="mediterraneo">Dieta mediterrânica</option>
+        <option value="low-carb">Low carb</option>
+        <option value="keto">Cetogénica / Keto</option>
+        <option value="vegetariano">Vegetariano</option>
+        <option value="vegano">Vegan</option>
+        <option value="sem-padrao">Sem padrão definido</option>
+      </select>
+    </div>
+    <div class="field"><label>Consumo de álcool</label>
+      <select id="pAlcohol">
+        <option value="">Selecciona</option>
+        <option value="nenhum">Não bebo</option>
+        <option value="ocasional">Ocasional — fins de semana</option>
+        <option value="moderado">Moderado — alguns dias/semana</option>
+        <option value="diario">Diário</option>
+      </select>
+    </div>
+    <div class="field"><label>Notas livres (opcional)</label>
+      <textarea id="pNotes" placeholder="ex: trabalho por turnos, viajo muito, tomo metformina de manhã…"></textarea>
+    </div>
+  </div>
+  <button class="save-btn" onclick="savePerfil()">Guardar Perfil</button>
+  <div class="profile-saved" id="profileSaved">✓ Perfil guardado com sucesso</div>
+
+  <div class="st">Dados</div>
+  <div class="pcard">
+    <div class="pcard-title">Backup</div>
+    <div style="font-size:11px;color:var(--soft);line-height:1.65;margin-bottom:13px">Exporta todos os dados (jejuns, peso, perfil) para um ficheiro JSON. Importa para restaurar num novo dispositivo.</div>
+    <div class="data-btn-row">
+      <button class="data-btn data-btn-export" onclick="exportData()">↑ Exportar</button>
+      <label class="data-btn data-btn-import" style="cursor:pointer">
+        ↓ Importar
+        <input type="file" accept=".json" style="display:none" onchange="importData(this)"/>
+      </label>
+    </div>
+  </div>
+  <div style="height:10px"></div>
+</div>
+
+<!-- ══ CIÊNCIA ══ -->
+<div class="view" id="vInfo">
+  <div class="st" style="margin-top:6px">Base científica</div>
+  <div class="disc"><strong>Nota:</strong> estes planos têm base em estudos de prevenção para historial familiar de cancro da próstata e colorectal. Complementam (não substituem) rastreio médico — PSA anual e colonoscopia.</div>
+  <div id="infoCards"></div>
+</div>
+
+</div><!-- /scroll -->
+
+<!-- MODAL FALHA -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle">O que aconteceu?</div>
+    <div class="modal-sub" id="modalSub">Sem julgamentos — ajudo a adaptar o plano a seguir.</div>
+    <div class="motivo-grid" id="motivoGrid"></div>
+    <button class="modal-confirm" id="modalConfirm" disabled onclick="confirmFalha()">Confirmar</button>
+  </div>
+</div>
+
+<!-- CELEBRAÇÃO -->
+<div class="celebration-bg" id="celebrationBg">
+  <div class="celebration-card">
+    <span class="celebration-icon">🎉</span>
+    <div class="celebration-title">Jejum completo!</div>
+    <div class="celebration-sub" id="celSub">Excelente trabalho.</div>
+    <div class="celebration-stats">
+      <div class="celebration-stat"><div class="cs-val" id="celHoras">—</div><div class="cs-key">Horas</div></div>
+      <div class="celebration-stat"><div class="cs-val" id="celTotal">—</div><div class="cs-key">Total</div></div>
+      <div class="celebration-stat"><div class="cs-val" id="celStreak">—</div><div class="cs-key">Seguidos</div></div>
+    </div>
+    <button class="celebration-close" onclick="closeCelebration()">Continuar</button>
+  </div>
+</div>
+
+<!-- ONBOARDING -->
+<div class="onboard-bg" id="onboardBg" style="display:none">
+  <div class="onboard-logo">Je<em>j</em>um</div>
+  <div class="onboard-tagline">O teu companheiro de jejum intermitente</div>
+  <div class="onboard-science">Planos baseados em evidência científica para prevenção oncológica (próstata e colorectal).</div>
+  <div class="onboard-step">Escolhe o teu plano</div>
+  <div class="onboard-plans" id="onboardPlans"></div>
+  <button class="onboard-btn" id="onboardBtn" disabled onclick="finishOnboarding()">Começar</button>
+  <span class="onboard-skip" onclick="finishOnboarding()">Saltar — configurar depois</span>
+</div>
+
+<nav>
+  <button class="nb active" id="nbTimer"  onclick="sw('Timer')"> <div class="ni">◎</div><div class="nl">Jejum</div></button>
+  <button class="nb"        id="nbPerfil" onclick="sw('Perfil')"><div class="ni">◑</div><div class="nl">Perfil</div></button>
+  <button class="nb"        id="nbInfo"   onclick="sw('Info')">  <div class="ni">⊕</div><div class="nl">Ciência</div></button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════
+// PLANOS
+// ════════════════════════════════
+const PLANS={
+  '16:8':{id:'16:8',name:'16:8',sub:'Jejum diário',fastH:16,tag:'Próstata + Intestino',desc:'16h jejum · 8h alimentação, todos os dias.',
+    why:'Janela alimentar restrita associada a menor risco de cancro da próstata. Suprime IGF-1 e insulina.',
+    mechs:['Supressão de IGF-1 — ligado ao cancro da próstata e do cólon','Autofagia activa a partir das 12h','Melhoria da sensibilidade à insulina'],
+    src:'Palomar-Cros et al. · JNCI 2025',
+    phases:[{h:0,l:'Digestão'},{h:4,l:'Transição'},{h:8,l:'Queima'},{h:12,l:'Autofagia'},{h:16,l:'Completo ✓'}]},
+  '5:2':{id:'5:2',name:'5:2',sub:'2 dias restrição',fastH:24,tag:'Microbioma intestinal',desc:'5 dias normais + 2 dias não consecutivos ~500 kcal.',
+    why:'Enriquece o microbioma com bactérias produtoras de butirato — protecção directa contra o cancro colorectal.',
+    mechs:['Enriquecimento de Lachnospiraceae — produz butirato protetor','Redução do rácio Firmicutes/Bacteroidetes','Redução de IGF-1 e insulina'],
+    src:'Frontiers in Microbiology 2025',
+    phases:[{h:0,l:'Restrição'},{h:8,l:'Cetose leve'},{h:16,l:'Autofagia'},{h:24,l:'Completo ✓'}]},
+  'ADF':{id:'ADF',name:'ADF',sub:'Dias alternados',fastH:24,tag:'Máxima evidência pré-clínica',desc:'Um dia normal, um dia de jejum (~600 kcal máx).',
+    why:'Protocolo com maior redução de incidência tumoral — 40 a 80%. Maior queda de IGF-1.',
+    mechs:['Redução tumoral de 40–80% em modelos animais','Maior descida de IGF-1','Privação de glucose às células tumorais'],
+    src:'Varady & Hellerstein 2007 · Clifton, CA Cancer J Clin 2021',
+    phases:[{h:0,l:'Início'},{h:10,l:'Lipólise'},{h:16,l:'Cetose'},{h:24,l:'Completo ✓'}]},
+  '13h':{id:'13h',name:'13h+',sub:'Jejum nocturno',fastH:13,tag:'Próstata — baixo esforço',desc:'Jantar cedo, pequeno-almoço tardio — mínimo 13h.',
+    why:'Menor risco de cancro da próstata com janela alimentar mais curta. O protocolo mais sustentável.',
+    mechs:['Reduz insulina nocturna elevada','Associado a menor risco de cancro da próstata','Compatível com vida social e familiar'],
+    src:'JNCI 2025 · Marinac et al., JAMA Oncol 2016',
+    phases:[{h:0,l:'Última refeição'},{h:4,l:'Digestão'},{h:8,l:'Queima leve'},{h:13,l:'Completo ✓'}]}
+};
+const CIRC=628;
+
+const MOTIVOS_SKIP=[
+  {id:'fome',label:'Fome intensa',icon:'😤'},
+  {id:'social',label:'Compromisso social',icon:'🍽️'},
+  {id:'trabalho',label:'Trabalho / stress',icon:'💼'},
+  {id:'cansaco',label:'Cansaço / treino',icon:'😴'},
+  {id:'nausea',label:'Mal-estar / náusea',icon:'🤢'},
+  {id:'esqueci',label:'Esqueci-me',icon:'🤷'},
+];
+const MOTIVOS_PARTIAL=[
+  {id:'fome-cedo',label:'Fome antes do tempo',icon:'🕐'},
+  {id:'treino',label:'Precisei de comer pelo treino',icon:'💪'},
+  {id:'social',label:'Refeição social',icon:'🍽️'},
+  {id:'mal-estar',label:'Mal-estar',icon:'😣'},
+];
+
+// ════════════════════════════════
+// STATE
+// ════════════════════════════════
+let S={
+  plan:'16:8',fasting:false,start:null,history:[],notif:false,
+  weightLog:[],adherence:[],
+  lastMeal:null,
+  reminder:{enabled:false,hour:20,min:0},
+  onboarded:false,
+  profile:{age:'',height:'',famHist:'',health:'',meds:'',trainDays:[],trainTime:'',trainType:'',intensity:'',wake:'',sleep:'',sleepQ:'',stress:'',diet:'',alcohol:'',notes:''}
+};
+let tid=null;
+let mealTid=null;
+let falhaMode='skip';
+let motivoSel=null;
+let onboardPlanSel=null;
+
+// ════════════════════════════════
+// INIT
+// ════════════════════════════════
+function init(){
+  try{const r=localStorage.getItem('j_v5');if(r){const p=JSON.parse(r);S={...S,...p};if(S.start)S.start=new Date(S.start);}}catch(e){}
+  buildPlanGrid();buildInfoCards();loadPerfilUI();buildReminderUI();
+  reqNotif();renderAll();renderWeight();renderAdaptCard();renderAdherence();renderMealCard();
+  if(S.fasting&&S.start)startTick();
+  if(!S.onboarded)showOnboarding();
+  if(S.reminder.enabled)scheduleReminder(false);
+  startMealElapsedTick();
+}
+function save(){localStorage.setItem('j_v5',JSON.stringify(S));}
+
+// ════════════════════════════════
+// NOTIFICAÇÕES
+// ════════════════════════════════
+async function reqNotif(){
+  if(!('Notification'in window))return;
+  if(Notification.permission==='granted'){S.notif=true;return;}
+  S.notif=(await Notification.requestPermission())==='granted';
+}
+function swNotif(title,body,delay,tag){
+  if(!S.notif)return;
+  if('serviceWorker'in navigator&&navigator.serviceWorker.controller){
+    navigator.serviceWorker.controller.postMessage({type:'SCHEDULE_NOTIF',delay,title,body,tag});
+  } else {
+    // Fallback: main thread timeout (funciona quando app está em background mas não com ecrã bloqueado)
+    if(delay>0)setTimeout(()=>{if(document.visibilityState==='hidden')new Notification(title,{body,icon:'icons/icon-192.png'});},delay);
+  }
+}
+function cancelSwNotifs(){
+  if('serviceWorker'in navigator&&navigator.serviceWorker.controller){
+    navigator.serviceWorker.controller.postMessage({type:'CANCEL_NOTIFS'});
+  }
+}
+
+// ════════════════════════════════
+// JEJUM
+// ════════════════════════════════
+function toggle(){S.fasting?stopFast():startFast();}
+function startFast(){
+  S.fasting=true;S.start=new Date();save();renderBtn();renderMealCard();startTick();schedNotifs();toast('Jejum iniciado 💪');
+}
+function stopFast(autoComplete){
+  const ms=Date.now()-S.start.getTime();
+  const pl=PLANS[S.plan];
+  const horas=ms/3600000;
+  const completo=horas>=pl.fastH*0.9;
+  const parcial=horas>=pl.fastH*0.4&&!completo;
+  const status=autoComplete?'completo':completo?'completo':parcial?'parcial':'falhado';
+
+  S.history.unshift({date:S.start.toISOString(),ms,plan:S.plan,status});
+  if(S.history.length>40)S.history.pop();
+
+  const today=dateKey(S.start);
+  const existing=S.adherence.findIndex(a=>a.date===today);
+  const adh={date:today,status,motivo:null,horas:+horas.toFixed(1)};
+  if(existing>=0)S.adherence[existing]=adh;else S.adherence.unshift(adh);
+  if(S.adherence.length>60)S.adherence.pop();
+
+  S.fasting=false;S.start=null;clearInterval(tid);tid=null;
+  cancelSwNotifs();
+  save();resetRing();renderAll();renderAdaptCard();renderAdherence();renderMealCard();
+
+  if(status==='completo'){
+    showCelebration(horas,pl.name);
+  } else {
+    toast('Jejum registado — '+fmtH(horas));
+  }
+}
+function startTick(){clearInterval(tid);tickNow();tid=setInterval(tickNow,1000);}
+function tickNow(){
+  if(!S.fasting||!S.start)return;
+  const ms=Date.now()-S.start.getTime(),pl=PLANS[S.plan],tot=pl.fastH*3600000,pct=Math.min(ms/tot,1);
+  renderTime(ms,pl);renderRing(pct);renderPhase(ms,pl);
+  if(pct>=1){stopFast(true);}
+}
+function schedNotifs(){
+  cancelSwNotifs();
+  const pl=PLANS[S.plan],tot=pl.fastH*3600000,el=Date.now()-S.start.getTime();
+  [[.5,'Metade do jejum! 💪','50% — continua assim'],[.75,'75% — quase lá 🔥','Falta pouco!'],[1,'Jejum completo! 🎉',pl.fastH+'h concluídas — abre a app']].forEach(([f,t,b])=>{
+    const d=tot*f-el;
+    if(d>0)swNotif(t,b,d,'jejum-'+f);
+  });
+}
+
+// ════════════════════════════════
+// ÚLTIMA REFEIÇÃO
+// ════════════════════════════════
+function logMealNow(){
+  S.lastMeal=new Date().toISOString();
+  save();renderMealCard();toast('Última refeição: agora');
+}
+function logMeal(){
+  const val=document.getElementById('mealTimeInput').value;
+  if(!val){toast('Define uma hora');return;}
+  const [h,m]=val.split(':').map(Number);
+  const d=new Date();
+  d.setHours(h,m,0,0);
+  if(d>new Date())d.setDate(d.getDate()-1);
+  S.lastMeal=d.toISOString();
+  save();renderMealCard();toast('Última refeição às '+val);
+}
+function startFastFromMeal(){
+  if(!S.lastMeal){toast('Regista primeiro a última refeição');return;}
+  S.fasting=true;
+  S.start=new Date(S.lastMeal);
+  save();renderBtn();renderMealCard();startTick();schedNotifs();
+  const timeStr=new Date(S.lastMeal).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
+  toast('Jejum iniciado desde as '+timeStr);
+}
+function renderMealCard(){
+  if(!S.lastMeal){
+    document.getElementById('mealTimeBig').textContent='—';
+    document.getElementById('mealDateLabel').textContent='Não registada';
+    document.getElementById('mealElapsedBlock').style.display='none';
+    document.getElementById('mealInfoBox').style.display='none';
+    document.getElementById('mealStartBtn').style.display='none';
+    document.getElementById('mealCard').classList.remove('active-meal');
+    return;
+  }
+  const d=new Date(S.lastMeal);
+  const now=new Date();
+  const elapsedH=(now-d)/3600000;
+  const pl=PLANS[S.plan];
+  const endTime=new Date(d.getTime()+pl.fastH*3600000);
+  const isToday=d.toDateString()===now.toDateString();
+  const dateStr=isToday?'hoje':'ontem';
+  document.getElementById('mealTimeBig').textContent=d.toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('mealDateLabel').textContent=dateStr;
+  document.getElementById('mealElapsedBlock').style.display='block';
+  document.getElementById('mealElapsedVal').textContent=fmtH(elapsedH);
+  document.getElementById('mealCard').classList.add('active-meal');
+  if(!S.fasting){
+    const fastEndsStr=endTime.toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
+    const endIsToday=endTime.toDateString()===now.toDateString();
+    const endDateStr=endIsToday?'hoje':'amanhã';
+    const remaining=endTime-now;
+    const infoEl=document.getElementById('mealInfoBox');
+    infoEl.style.display='block';
+    if(remaining>0){
+      infoEl.innerHTML=`Jejum de <strong>${pl.fastH}h</strong> termina ${endDateStr} às <strong>${fastEndsStr}</strong> · Faltam ${fmtH(remaining/3600000)}`;
+    } else {
+      infoEl.innerHTML=`Jejum de <strong>${pl.fastH}h</strong> já estaria completo — terminou às <strong>${fastEndsStr}</strong>`;
+    }
+    document.getElementById('mealStartBtn').style.display='block';
+  } else {
+    document.getElementById('mealInfoBox').style.display='none';
+    document.getElementById('mealStartBtn').style.display='none';
+  }
+}
+function startMealElapsedTick(){
+  clearInterval(mealTid);
+  mealTid=setInterval(()=>{
+    if(S.lastMeal)document.getElementById('mealElapsedVal').textContent=fmtH((Date.now()-new Date(S.lastMeal).getTime())/3600000);
+  },60000);
+}
+
+// ════════════════════════════════
+// MODAL DE FALHA
+// ════════════════════════════════
+function openFalhaModal(mode){
+  falhaMode=mode;motivoSel=null;
+  const confirm=document.getElementById('modalConfirm');confirm.disabled=true;
+  if(mode==='skip'){
+    document.getElementById('modalTitle').textContent='Falhar o jejum de hoje?';
+    document.getElementById('modalSub').textContent='Sem julgamentos — diz o motivo para adaptar a sugestão de amanhã.';
+    document.getElementById('motivoGrid').innerHTML=MOTIVOS_SKIP.map(m=>`<button class="motivo-btn" data-id="${m.id}" onclick="selMotivo(this)">${m.icon}<br>${m.label}</button>`).join('');
+  } else {
+    document.getElementById('modalTitle').textContent='Jejum parcial?';
+    document.getElementById('modalSub').textContent='Interrompeste antes do tempo — diz o que aconteceu.';
+    document.getElementById('motivoGrid').innerHTML=MOTIVOS_PARTIAL.map(m=>`<button class="motivo-btn" data-id="${m.id}" onclick="selMotivo(this)">${m.icon}<br>${m.label}</button>`).join('');
+  }
+  document.getElementById('modalBg').classList.add('open');
+}
+function selMotivo(el){
+  document.querySelectorAll('.motivo-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');motivoSel=el.dataset.id;
+  document.getElementById('modalConfirm').disabled=false;
+}
+function closeModal(){document.getElementById('modalBg').classList.remove('open');}
+document.getElementById('modalBg').addEventListener('click',e=>{if(e.target===document.getElementById('modalBg'))closeModal();});
+function confirmFalha(){
+  closeModal();
+  const today=dateKey(new Date());
+  if(S.fasting){
+    stopFast(false);
+    const idx=S.adherence.findIndex(a=>a.date===today);
+    if(idx>=0){S.adherence[idx].status=falhaMode==='skip'?'falhado':'parcial';S.adherence[idx].motivo=motivoSel;}
+  } else {
+    const existing=S.adherence.findIndex(a=>a.date===today);
+    const adh={date:today,status:falhaMode==='skip'?'falhado':'parcial',motivo:motivoSel,horas:0};
+    if(existing>=0)S.adherence[existing]=adh;else S.adherence.unshift(adh);
+    if(S.adherence.length>60)S.adherence.pop();
+  }
+  save();renderAdaptCard();renderAdherence();renderStats();
+  toast('Registado. Continua — amanhã é outro dia.');
+}
+
+// ════════════════════════════════
+// LEMBRETE DIÁRIO
+// ════════════════════════════════
+function buildReminderUI(){
+  const hSel=document.getElementById('reminderHour');
+  const mSel=document.getElementById('reminderMin');
+  for(let i=0;i<24;i++){const o=document.createElement('option');o.value=i;o.textContent=pad(i)+'h';if(i===S.reminder.hour)o.selected=true;hSel.appendChild(o);}
+  ['00','15','30','45'].forEach(v=>{const o=document.createElement('option');o.value=parseInt(v);o.textContent=v;if(parseInt(v)===S.reminder.min)o.selected=true;mSel.appendChild(o);});
+  const toggle=document.getElementById('reminderToggle');
+  toggle.checked=S.reminder.enabled;
+  if(S.reminder.enabled)document.getElementById('reminderTimeRow').style.display='flex';
+}
+function toggleReminder(){
+  const enabled=document.getElementById('reminderToggle').checked;
+  S.reminder.enabled=enabled;
+  document.getElementById('reminderTimeRow').style.display=enabled?'flex':'none';
+  save();
+  if(enabled){scheduleReminder(true);}
+  else{toast('Lembrete desactivado');}
+}
+function saveReminder(){
+  S.reminder.hour=parseInt(document.getElementById('reminderHour').value);
+  S.reminder.min=parseInt(document.getElementById('reminderMin').value);
+  save();
+  if(S.reminder.enabled)scheduleReminder(true);
+}
+function scheduleReminder(showToast){
+  if(!S.notif||!S.reminder.enabled)return;
+  const h=S.reminder.hour,m=S.reminder.min;
+  const now=new Date();
+  const target=new Date();
+  target.setHours(h,m,0,0);
+  if(target<=now)target.setDate(target.getDate()+1);
+  const delay=target-now;
+  const label=`Hora do jejum! (${pad(h)}:${pad(m)})`;
+  if('serviceWorker'in navigator&&navigator.serviceWorker.controller){
+    navigator.serviceWorker.controller.postMessage({type:'SCHEDULE_REMINDER',delay,label});
+  }
+  if(showToast)toast('Lembrete definido para as '+pad(h)+':'+pad(m));
+}
+
+// ════════════════════════════════
+// CELEBRAÇÃO
+// ════════════════════════════════
+function showCelebration(horas,planName){
+  const streak=calcStreak();
+  document.getElementById('celHoras').textContent=fmtH(horas);
+  document.getElementById('celTotal').textContent=S.history.length;
+  document.getElementById('celStreak').textContent=streak;
+  document.getElementById('celSub').textContent=planName+' · '+fmtH(horas)+' concluídas';
+  document.getElementById('celebrationBg').classList.add('open');
+}
+function closeCelebration(){
+  document.getElementById('celebrationBg').classList.remove('open');
+}
+function calcStreak(){
+  let streak=0;const today=new Date();today.setHours(0,0,0,0);
+  for(let i=0;i<S.history.length;i++){const d=new Date(S.history[i].date);d.setHours(0,0,0,0);if(Math.round((today-d)/86400000)<=i+1)streak++;else break;}
+  return streak;
+}
+
+// ════════════════════════════════
+// ONBOARDING
+// ════════════════════════════════
+function showOnboarding(){
+  const bg=document.getElementById('onboardBg');
+  bg.style.display='flex';
+  document.getElementById('onboardPlans').innerHTML=Object.values(PLANS).map(pl=>
+    `<div class="onboard-pc" data-id="${pl.id}" onclick="selOnboardPlan(this,'${pl.id}')">
+      <div class="onboard-pn">${pl.name}</div>
+      <div class="onboard-pd">${pl.desc}</div>
+    </div>`).join('');
+}
+function selOnboardPlan(el,id){
+  document.querySelectorAll('.onboard-pc').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');onboardPlanSel=id;
+  document.getElementById('onboardBtn').disabled=false;
+}
+function finishOnboarding(){
+  if(onboardPlanSel)selPlan(onboardPlanSel);
+  S.onboarded=true;save();
+  document.getElementById('onboardBg').style.display='none';
+  if(!S.notif)reqNotif();
+}
+
+// ════════════════════════════════
+// EXPORT / IMPORT
+// ════════════════════════════════
+function exportData(){
+  const data=JSON.stringify(S,null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='jejum-backup-'+dateKey(new Date())+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Dados exportados ✓');
+}
+function importData(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      S={...S,...data};
+      if(S.start)S.start=new Date(S.start);
+      save();loadPerfilUI();buildReminderUI();
+      renderAll();renderWeight();renderAdaptCard();renderAdherence();renderMealCard();
+      if(S.reminder.enabled)scheduleReminder(false);
+      toast('Dados importados ✓');
+    }catch(err){toast('Erro ao importar — ficheiro inválido');}
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+
+// ════════════════════════════════
+// ADAPTAÇÃO — ANÁLISE LOCAL
+// ════════════════════════════════
+function calcAdesao(){
+  const last7=getLast7();
+  const total=last7.filter(d=>d!=='vazio').length;
+  if(total===0)return null;
+  const ok=last7.filter(d=>d==='completo').length;
+  const parcial=last7.filter(d=>d==='parcial').length;
+  return Math.round((ok+parcial*.5)/total*100);
+}
+function getLast7(){
+  const result=[];
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=dateKey(d);const rec=S.adherence.find(a=>a.date===k);result.push(rec?rec.status:'vazio');}
+  return result;
+}
+function renderAdaptCard(){
+  const el=document.getElementById('adaptCard');
+  const last7=getLast7();
+  const falhas=last7.filter(d=>d==='falhado').length;
+  const parciais=last7.filter(d=>d==='parcial').length;
+  const completos=last7.filter(d=>d==='completo').length;
+  const adesao=calcAdesao();
+  if(S.adherence.length===0){
+    el.innerHTML=`<div class="adapt-card ok"><div class="adapt-header"><div class="adapt-icon">◎</div><div class="adapt-title">Plano activo: ${PLANS[S.plan].name}</div></div><div class="adapt-body">Inicia o teu primeiro jejum para começar o acompanhamento.</div></div>`;
+    return;
+  }
+  if(falhas>=3){
+    const suave=S.plan==='ADF'?'5:2':S.plan==='5:2'?'16:8':S.plan==='16:8'?'13h':S.plan;
+    el.innerHTML=`<div class="adapt-card alert"><div class="adapt-header"><div class="adapt-icon">⚠️</div><div class="adapt-title">Plano demasiado exigente?</div></div><div class="adapt-body">${falhas} falhas nos últimos 7 dias. Pode fazer sentido baixar a exigência temporariamente. <strong>Plano sugerido: ${PLANS[suave].name}</strong> — mais fácil de manter, mantendo os benefícios de prevenção.</div><button class="adapt-action" onclick="selPlan('${suave}');renderAdaptCard()">Mudar para ${PLANS[suave].name}</button></div>`;
+    return;
+  }
+  const last14=[];
+  for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=dateKey(d);const rec=S.adherence.find(a=>a.date===k);if(rec)last14.push({dow:d.getDay(),status:rec.status});}
+  const fimSemFalhas=last14.filter(r=>(r.dow===0||r.dow===6)&&r.status==='falhado').length;
+  if(fimSemFalhas>=2&&S.plan!=='5:2'){
+    el.innerHTML=`<div class="adapt-card warn"><div class="adapt-header"><div class="adapt-icon">📅</div><div class="adapt-title">Padrão: falhas ao fim de semana</div></div><div class="adapt-body">Detectei falhas repetidas ao fim de semana. O plano <strong>5:2</strong> pode ser mais flexível — escolhes os 2 dias de restrição, evitando sábado e domingo.</div><button class="adapt-action" onclick="selPlan('5:2');renderAdaptCard()">Experimentar 5:2</button></div>`;
+    return;
+  }
+  if(adesao!==null&&adesao>=75){
+    el.innerHTML=`<div class="adapt-card ok"><div class="adapt-header"><div class="adapt-icon">✦</div><div class="adapt-title">Boa adesão — ${adesao}%</div></div><div class="adapt-body">${completos} jejuns completos em 7 dias. Continua assim — a consistência é o factor mais importante para os benefícios preventivos a longo prazo.</div></div>`;
+    return;
+  }
+  el.innerHTML=`<div class="adapt-card warn"><div class="adapt-header"><div class="adapt-icon">◑</div><div class="adapt-title">Adesão: ${adesao??'—'}%</div></div><div class="adapt-body">${parciais} jejuns parciais e ${falhas} falhados. Regista o motivo quando falhares — assim o acompanhamento fica mais preciso.</div></div>`;
+}
+function renderAdherence(){
+  const el=document.getElementById('adherenceRow');
+  const dias=['D','S','T','Q','Q','S','S'];
+  const result=[];
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=dateKey(d);const rec=S.adherence.find(a=>a.date===k);const dow=d.getDay();result.push({dow,k,status:rec?rec.status:'vazio',label:dias[dow]});}
+  const icons={completo:'✓',parcial:'◑',falhado:'✕',vazio:'·'};
+  el.innerHTML=result.map(r=>`<div class="adh-day ${r.status}"><div class="adh-icon">${icons[r.status]}</div><div>${r.label}</div></div>`).join('');
+  const a=calcAdesao();document.getElementById('sA').textContent=a!==null?a+'%':'—';
+}
+
+// ════════════════════════════════
+// PESO
+// ════════════════════════════════
+function addWeight(){
+  const v=parseFloat(document.getElementById('wInput').value);
+  if(!v||v<30||v>250){toast('Peso inválido');return;}
+  S.weightLog.unshift({date:new Date().toISOString(),val:v});
+  if(S.weightLog.length>30)S.weightLog.pop();
+  document.getElementById('wInput').value='';
+  save();renderWeight();toast('Peso registado: '+v+' kg');
+}
+function renderWeight(){
+  const log=S.weightLog,h=S.profile.height;
+  const wbMain=document.getElementById('wbMain');
+  const wbDelta=document.getElementById('wbDelta');
+  const imcVal=document.getElementById('imcVal');
+  const imcMarker=document.getElementById('imcMarker');
+  const graph=document.getElementById('weightGraph');
+  if(!log.length){wbMain.innerHTML='— <span>kg</span>';wbDelta.textContent='Sem registos';imcVal.textContent='—';imcVal.style.color='var(--soft)';graph.innerHTML='<div style="font-size:10px;color:var(--muted);align-self:center;width:100%;text-align:center">Regista o primeiro peso abaixo</div>';return;}
+  const latest=log[0].val;
+  wbMain.innerHTML=latest+' <span>kg</span>';
+  if(log.length>=2){const diff=(latest-log[1].val).toFixed(1);const sign=diff>0?'+':'';wbDelta.innerHTML=`Último: <span style="color:${diff<=0?'var(--accent)':'var(--red)'}">${sign}${diff} kg</span>`;}
+  else wbDelta.textContent='Primeiro registo';
+  if(h&&h>0){
+    const hm=h/100,imc=(latest/(hm*hm)).toFixed(1);
+    let color='var(--accent)';
+    if(imc<18.5)color='var(--blue)';else if(imc<25)color='var(--accent)';else if(imc<30)color='var(--amber)';else color='var(--red)';
+    imcVal.textContent=imc;imcVal.style.color=color;
+    const pct=Math.min(Math.max((parseFloat(imc)-15)/25,0),1);
+    imcMarker.style.left=(pct*100)+'%';
+    const pesoIdeal=(22.5*hm*hm).toFixed(1);
+    const metaVal=latest>parseFloat(pesoIdeal)?(latest-parseFloat(pesoIdeal)).toFixed(1)+' kg':'Ideal';
+    document.getElementById('cpIMC').textContent=imc;
+    document.getElementById('cpPeso').textContent=pesoIdeal+' kg';
+    document.getElementById('cpMeta').textContent=metaVal;
+    document.getElementById('computedRow').style.display='flex';
+  } else {imcVal.textContent='—';imcVal.style.color='var(--soft)';document.getElementById('computedRow').style.display='none';}
+  if(log.length===1){graph.innerHTML='<div style="font-size:10px;color:var(--muted);align-self:center;width:100%;text-align:center">Regista mais um peso para ver evolução</div>';return;}
+  const vals=log.slice(0,10).map(l=>l.val).reverse();
+  const mn=Math.min(...vals)-1,mx=Math.max(...vals)+1,range=mx-mn||1;
+  const colors=vals.map((v,i,a)=>i===0?'var(--muted)':v<=a[i-1]?'var(--accent)':'var(--red)');
+  graph.innerHTML=vals.map((v,i)=>{
+    const pct=((v-mn)/range*100);
+    const d=new Date(log.slice(0,10).map(l=>l.date).reverse()[i]);
+    return`<div class="wbar" style="height:${Math.max(pct,6)}%;background:${colors[i]};opacity:${i===vals.length-1?1:.65}"><div class="wbar-tip">${v} kg · ${d.toLocaleDateString('pt-PT',{day:'numeric',month:'short'})}</div></div>`;
+  }).join('');
+}
+function updateIMC(){
+  const h=parseFloat(document.getElementById('pHeight').value);
+  if(h&&S.weightLog.length){S.profile.height=h;renderWeight();}
+}
+
+// ════════════════════════════════
+// PERFIL
+// ════════════════════════════════
+function toggleDay(el){el.classList.toggle('on');const d=parseInt(el.dataset.d);const idx=S.profile.trainDays.indexOf(d);if(idx>=0)S.profile.trainDays.splice(idx,1);else S.profile.trainDays.push(d);}
+function savePerfil(){
+  const p=S.profile;
+  const fields={pAge:'age',pHeight:'height',pFamHist:'famHist',pHealth:'health',pMeds:'meds',pTrainTime:'trainTime',pTrainType:'trainType',pIntensity:'intensity',pWake:'wake',pSleep:'sleep',pSleepQ:'sleepQ',pStress:'stress',pDiet:'diet',pAlcohol:'alcohol',pNotes:'notes'};
+  Object.entries(fields).forEach(([id,key])=>{const el=document.getElementById(id);if(el)p[key]=el.value;});
+  if(p.height)p.height=parseFloat(p.height)||'';
+  save();renderWeight();
+  const ps=document.getElementById('profileSaved');ps.style.display='block';setTimeout(()=>ps.style.display='none',2200);
+  toast('Perfil guardado ✓');
+}
+function loadPerfilUI(){
+  const p=S.profile;
+  const fields={pAge:'age',pHeight:'height',pFamHist:'famHist',pHealth:'health',pMeds:'meds',pTrainTime:'trainTime',pTrainType:'trainType',pIntensity:'intensity',pWake:'wake',pSleep:'sleep',pSleepQ:'sleepQ',pStress:'stress',pDiet:'diet',pAlcohol:'alcohol',pNotes:'notes'};
+  Object.entries(fields).forEach(([id,key])=>{if(p[key]){const el=document.getElementById(id);if(el)el.value=p[key];}});
+  if(p.trainDays&&p.trainDays.length)document.querySelectorAll('.day-btn').forEach(b=>{if(p.trainDays.includes(parseInt(b.dataset.d)))b.classList.add('on');});
+}
+
+// ════════════════════════════════
+// RENDER
+// ════════════════════════════════
+function renderAll(){renderBtn();renderStats();renderHist();}
+function renderBtn(){const b=document.getElementById('actBtn');S.fasting?(b.textContent='Terminar Jejum',b.className='btn btn-stop'):(b.textContent='Iniciar Jejum',b.className='btn btn-go');}
+function renderStats(){
+  const n=S.history.length,totMs=S.history.reduce((a,h)=>a+h.ms,0);
+  document.getElementById('sN').textContent=n;
+  document.getElementById('sH').textContent=Math.round(totMs/3600000)+'h';
+  document.getElementById('sS').textContent=calcStreak();
+  const a=calcAdesao();document.getElementById('sA').textContent=a!==null?a+'%':'—';
+}
+function renderHist(){
+  const el=document.getElementById('hist');
+  if(!S.history.length){el.innerHTML='<div class="empty">Nenhum jejum registado<br>Inicia o teu primeiro jejum ↑</div>';return;}
+  const statusIcon={completo:'<span style="color:var(--accent)">✓</span>',parcial:'<span style="color:var(--amber)">◑</span>',falhado:'<span style="color:var(--red)">✕</span>'};
+  el.innerHTML=S.history.slice(0,8).map(h=>{
+    const pl=PLANS[h.plan]||PLANS['16:8'],d=new Date(h.date);
+    return`<div class="hi"><div><div class="hd">${d.toLocaleDateString('pt-PT',{weekday:'short',day:'numeric',month:'short'})}</div><div class="hv">${fmtH(h.ms/3600000)}</div></div><div style="text-align:right"><div class="hp">${h.plan}</div><div style="font-size:14px">${statusIcon[h.status||'completo']||statusIcon.completo}</div></div></div>`;
+  }).join('');
+}
+function renderTime(ms,pl){
+  const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000);
+  document.getElementById('tTime').textContent=pad(h)+':'+pad(m)+':'+pad(s);
+  const rem=pl.fastH*3600000-ms;
+  document.getElementById('tRem').textContent=rem>0?Math.floor(rem/3600000)+'h '+pad(Math.floor((rem%3600000)/60000))+'m restantes':'CONCLUÍDO';
+}
+function renderRing(pct){const r=document.getElementById('rTrack');r.style.strokeDashoffset=CIRC*(1-pct);r.classList.toggle('pulsing',S.fasting&&pct<1);}
+function renderPhase(ms,pl){const h=ms/3600000;let cur=pl.phases[0];pl.phases.forEach(p=>{if(h>=p.h)cur=p;});document.getElementById('tPhase').textContent=cur.l;}
+function resetRing(){const r=document.getElementById('rTrack');r.style.strokeDashoffset=CIRC;r.classList.remove('pulsing');document.getElementById('tTime').textContent='00:00:00';document.getElementById('tRem').textContent='Pronto para jejuar';document.getElementById('tPhase').textContent='—';}
+
+function selPlan(id){
+  if(S.fasting){toast('Para o jejum antes de mudar o plano');return;}
+  S.plan=id;save();
+  document.querySelectorAll('.pc').forEach(c=>c.classList.toggle('sel',c.dataset.id===id));
+  document.getElementById('chipLabel').textContent=PLANS[id].name;
+  renderMealCard();
+  toast('Plano '+PLANS[id].name+' seleccionado');
+}
+function buildPlanGrid(){
+  document.getElementById('planGrid').innerHTML=Object.values(PLANS).map(pl=>
+    `<div class="pc${pl.id===S.plan?' sel':''}" data-id="${pl.id}" onclick="selPlan('${pl.id}')">
+      <div class="pn">${pl.name}</div><div class="pd">${pl.desc}</div><div class="ptag">${pl.tag}</div>
+    </div>`).join('');
+}
+function buildInfoCards(){
+  document.getElementById('infoCards').innerHTML=Object.values(PLANS).map(pl=>
+    `<div class="info-card">
+      <div class="ic-title">${pl.name} <small style="font-family:'Sora';font-size:11px;font-weight:400;color:var(--soft)">${pl.sub}</small></div>
+      <div class="ic-tag">${pl.tag}</div>
+      <div class="ic-body"><strong>${pl.why}</strong>
+        <div class="mechs">${pl.mechs.map(m=>`<div class="mech"><div class="mech-dot"></div><span>${m}</span></div>`).join('')}</div>
+        <div class="src">Fonte: ${pl.src}</div>
+      </div>
+    </div>`).join('');
+}
+
+function sw(v){['Timer','Perfil','Info'].forEach(x=>{document.getElementById('v'+x).classList.toggle('active',x===v);document.getElementById('nb'+x).classList.toggle('active',x===v);});}
+
+// ════════════════════════════════
+// UTILS
+// ════════════════════════════════
+function pad(n){return String(n).padStart(2,'0');}
+function fmtH(h){const hh=Math.floor(h),mm=Math.round((h-hh)*60);return mm?hh+'h '+mm+'m':hh+'h';}
+function dateKey(d){return d.toISOString().slice(0,10);}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2600);}
+
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+init();
+</script>
+</body>
+</html>
