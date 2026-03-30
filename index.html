@@ -655,6 +655,7 @@ let motivoSel=null;
 // INIT
 // ════════════════════════════════
 function init(){
+  if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
   try{const r=localStorage.getItem('j_v5');if(r){const p=JSON.parse(r);S={...S,...p};if(S.start)S.start=new Date(S.start);}}catch(e){}
   buildPlanGrid();buildInfoCards();loadPerfilUI();buildReminderUI();
   reqNotif();renderAll();renderWeight();renderAdaptCard();renderAdherence();renderMealCard();
