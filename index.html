@@ -1579,10 +1579,20 @@ function renderPlanSourceCard(){
     </div>`;
 }
 
-// Redirecionar scroll de fora do contentor para o .scroll
+// Redirecionar scroll de fora do contentor principal para o .scroll
+// Exclui elementos que já têm scroll próprio (ob-card, modal, etc.)
 document.documentElement.addEventListener('wheel',function(e){
   const sc=document.querySelector('.scroll');
-  if(sc&&!sc.contains(e.target)){e.preventDefault();sc.scrollTop+=e.deltaY;}
+  if(!sc)return;
+  // Não interceptar se o alvo já está dentro de um elemento scrollável
+  let el=e.target;
+  while(el&&el!==document.documentElement){
+    if(el===sc)return; // já está no .scroll — deixar correr normalmente
+    const style=getComputedStyle(el);
+    if((style.overflowY==='auto'||style.overflowY==='scroll')&&el.scrollHeight>el.clientHeight)return;
+    el=el.parentElement;
+  }
+  e.preventDefault();sc.scrollTop+=e.deltaY;
 },{passive:false});
 </script>
 </body>
