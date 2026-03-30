@@ -228,24 +228,6 @@ nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-w
 .toast{position:fixed;top:54px;left:50%;transform:translateX(-50%) translateY(-14px);background:var(--s2);border:1px solid var(--border);border-radius:30px;padding:9px 20px;font-size:11px;color:var(--text);z-index:999;opacity:0;transition:.28s;white-space:nowrap;pointer-events:none}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* ── ONBOARDING ── */
-.onboard-bg{position:fixed;inset:0;background:var(--bg);z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;text-align:center;overflow-y:auto}
-.onboard-logo{font-family:'Playfair Display',serif;font-size:44px;font-weight:700;margin-bottom:10px}
-.onboard-logo em{font-style:italic;color:var(--accent)}
-.onboard-tagline{font-size:13px;color:var(--soft);line-height:1.7;margin-bottom:10px}
-.onboard-science{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:32px;max-width:300px}
-.onboard-step{font-size:9px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase;margin-bottom:14px}
-.onboard-plans{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;margin-bottom:20px}
-.onboard-pc{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:14px;cursor:pointer;transition:all .2s;text-align:left}
-.onboard-pc:active{transform:scale(.97)}
-.onboard-pc.sel{border-color:var(--accent);background:rgba(79,255,176,.07)}
-.onboard-pn{font-family:'Playfair Display',serif;font-size:20px;font-weight:700}
-.onboard-pc.sel .onboard-pn{color:var(--accent)}
-.onboard-pd{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.4}
-.onboard-btn{width:100%;padding:15px;background:var(--accent);color:#060a0e;border:none;border-radius:var(--r);font-family:'Sora',sans-serif;font-size:12px;letter-spacing:.16em;font-weight:600;cursor:pointer;transition:.2s;text-transform:uppercase;margin-bottom:14px}
-.onboard-btn:active{transform:scale(.98)}
-.onboard-btn:disabled{opacity:.35;pointer-events:none}
-.onboard-skip{font-size:11px;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 
 /* ── CELEBRAÇÃO ── */
 .celebration-bg{position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:600;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s}
@@ -603,16 +585,6 @@ nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-w
   </div>
 </div>
 
-<!-- ONBOARDING -->
-<div class="onboard-bg" id="onboardBg" style="display:none">
-  <div class="onboard-logo">Je<em>j</em>um</div>
-  <div class="onboard-tagline">O teu companheiro de jejum intermitente</div>
-  <div class="onboard-science">Planos baseados em evidência científica para prevenção oncológica (próstata e colorectal).</div>
-  <div class="onboard-step">Escolhe o teu plano</div>
-  <div class="onboard-plans" id="onboardPlans"></div>
-  <button class="onboard-btn" id="onboardBtn" disabled onclick="finishOnboarding()">Começar</button>
-  <span class="onboard-skip" onclick="finishOnboarding()">Saltar — configurar depois</span>
-</div>
 
 <nav>
   <button class="nb active" id="nbTimer"  onclick="sw('Timer')"> <div class="ni">◎</div><div class="nl">Jejum</div></button>
@@ -672,14 +644,12 @@ let S={
   weightLog:[],adherence:[],
   lastMeal:null,
   reminder:{enabled:false,hour:20,min:0},
-  onboarded:false,
   profile:{age:'',height:'',famHist:'',health:'',meds:'',trainDays:[],trainTime:'',trainType:'',intensity:'',wake:'',sleep:'',sleepQ:'',stress:'',diet:'',alcohol:'',notes:''}
 };
 let tid=null;
 let mealTid=null;
 let falhaMode='skip';
 let motivoSel=null;
-let onboardPlanSel=null;
 
 // ════════════════════════════════
 // INIT
@@ -689,7 +659,6 @@ function init(){
   buildPlanGrid();buildInfoCards();loadPerfilUI();buildReminderUI();
   reqNotif();renderAll();renderWeight();renderAdaptCard();renderAdherence();renderMealCard();
   if(S.fasting&&S.start)startTick();
-  if(!S.onboarded)showOnboarding();
   if(S.reminder.enabled)scheduleReminder(false);
   startMealElapsedTick();
 }
@@ -942,29 +911,6 @@ function calcStreak(){
   return streak;
 }
 
-// ════════════════════════════════
-// ONBOARDING
-// ════════════════════════════════
-function showOnboarding(){
-  const bg=document.getElementById('onboardBg');
-  bg.style.display='flex';
-  document.getElementById('onboardPlans').innerHTML=Object.values(PLANS).map(pl=>
-    `<div class="onboard-pc" data-id="${pl.id}" onclick="selOnboardPlan(this,'${pl.id}')">
-      <div class="onboard-pn">${pl.name}</div>
-      <div class="onboard-pd">${pl.desc}</div>
-    </div>`).join('');
-}
-function selOnboardPlan(el,id){
-  document.querySelectorAll('.onboard-pc').forEach(c=>c.classList.remove('sel'));
-  el.classList.add('sel');onboardPlanSel=id;
-  document.getElementById('onboardBtn').disabled=false;
-}
-function finishOnboarding(){
-  if(onboardPlanSel)selPlan(onboardPlanSel);
-  S.onboarded=true;save();
-  document.getElementById('onboardBg').style.display='none';
-  if(!S.notif)reqNotif();
-}
 
 // ════════════════════════════════
 // EXPORT / IMPORT
