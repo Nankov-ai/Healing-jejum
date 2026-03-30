@@ -1410,7 +1410,7 @@ function openNutriOnboarding(){
   openOnboarding();
   obShowStep('obS2A');
 }
-function closeOnboarding(){document.getElementById('obBg').classList.remove('open');}
+function closeOnboarding(){document.getElementById('obBg').classList.remove('open');const sc=document.querySelector('.scroll');if(sc)sc.scrollTop=0;}
 function obShowStep(id){
   document.querySelectorAll('.ob-step').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
