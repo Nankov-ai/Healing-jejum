@@ -1338,12 +1338,33 @@ function obGoStep2Back(){obShowStep(obSrc==='nutritionist'?'obS2A':'obS2B');}
 function obGoStep3(){
   obResultPlan=suggestPlan(obAnswers);
   const pl=PLANS[obResultPlan];
-  const srcLabel=obSrc==='soon'?'Sugestão temporária (podes mudar quando tiveres plano do nutricionista)':'Baseado no teu perfil, recomendamos:';
+  const srcLabel=obSrc==='soon'?'Sugestão temporária — actualiza quando tiveres o plano do nutricionista.':'Recomendação baseada no teu perfil e respostas:';
   document.getElementById('obResultSub').textContent=srcLabel;
   document.getElementById('obResultName').textContent=pl.name;
   document.getElementById('obResultDesc').textContent=pl.desc;
-  document.getElementById('obResultWhy').textContent=pl.why;
+  document.getElementById('obResultWhy').textContent=buildSuggestionReason(obResultPlan);
   obShowStep('obS3');
+}
+function buildSuggestionReason(planId){
+  const p=S.profile;
+  const age=parseInt(p.age)||0;
+  const height=parseFloat(p.height)||0;
+  const lastW=S.weightLog.length?S.weightLog[0].val:0;
+  const imc=height&&lastW?lastW/((height/100)**2):0;
+  const reasons=[];
+  if(imc>0&&imc<18.5) reasons.push('IMC abaixo do peso ('+imc.toFixed(1)+') — jejum intenso não é indicado');
+  else if(imc>=30) reasons.push('IMC '+imc.toFixed(1)+' — plano mais intenso beneficia a composição corporal');
+  if(age>=65) reasons.push('Idade '+age+' anos — protocolo conservador mais seguro');
+  else if(age>=55) reasons.push('Acima dos 55 anos — abordagem gradual recomendada');
+  if(p.health==='refluxo') reasons.push('Refluxo — janelas de jejum curtas reduzem irritação gástrica');
+  if(p.health==='diabetes2') reasons.push('Diabetes tipo 2 — progressão lenta e acompanhamento médico essenciais');
+  if(p.meds==='refeicoes') reasons.push('Medicação às refeições — janela alimentar mais larga necessária');
+  if(p.stress==='muito-alto') reasons.push('Stress elevado — jejum intenso pode agravar cortisol');
+  if(p.sleepQ==='insonia'||p.sleepQ==='ma') reasons.push('Sono perturbado — começar com protocolo suave');
+  if(obAnswers.exp==='never') reasons.push('Primeira experiência — adaptação gradual');
+  if(obAnswers.schedule==='social') reasons.push('Estilo de vida social — flexibilidade nos dias de restrição');
+  if(!reasons.length) reasons.push('Equilíbrio entre eficácia preventiva e sustentabilidade diária');
+  return reasons.join(' · ');
 }
 function obConfirmNutri(){
   const h=parseInt(document.getElementById('obHours').value);
@@ -1364,10 +1385,73 @@ function obConfirm(){
   toast('Plano '+PLANS[obResultPlan].name+' activo ✓');
 }
 function suggestPlan(a){
-  if(a.exp==='never') return '13h';
-  if(a.schedule==='social') return '5:2';
-  if(a.exp==='regular'&&a.goal==='weight') return 'ADF';
-  return '16:8';
+  const p=S.profile;
+  const age=parseInt(p.age)||0;
+  const height=parseFloat(p.height)||0;
+  const lastW=S.weightLog.length?S.weightLog[0].val:0;
+  const imc=height&&lastW?lastW/((height/100)**2):0;
+  const trainDays=(p.trainDays||[]).length;
+  const intensity=p.intensity||'';
+  const health=p.health||'';
+  const stress=p.stress||'';
+  const sleepQ=p.sleepQ||'';
+  const meds=p.meds||'';
+  const diet=p.diet||'';
+
+  // ── Pontuação de "carga" — quanto mais alto, mais conservador o plano ──
+  let score=0; // 0=13h  1-2=16:8  3-4=5:2  5+=ADF
+
+  // IMC
+  if(imc>0&&imc<18.5) return '13h'; // abaixo do peso → plano mais suave sempre
+  if(imc>=30) score+=1;              // obesidade → beneficia de plano mais intenso
+  if(imc>=35) score+=1;
+
+  // Idade
+  if(age>=65) return '13h';          // >65 → conservador por defeito
+  if(age>=55) score-=1;              // 55-64 → penalizar intensidade
+  if(age<35)  score+=1;              // jovem → aguenta mais
+
+  // Condições de saúde — contraindications fortes
+  if(health==='refluxo')  return '13h'; // refluxo piora com jejum longo
+  if(health==='diabetes2') score-=2;    // diabetes → começar devagar
+  if(health==='tiroideia') score-=1;
+
+  // Medicação às refeições → jejum longo difícil
+  if(meds==='refeicoes') score-=2;
+  if(meds==='manha')     score-=1;
+
+  // Treino
+  if(trainDays>=5&&(intensity==='intensa'||intensity==='muito-intensa')) score+=1;
+  if(intensity==='muito-intensa'&&trainDays>=4) score+=1;
+  if(intensity==='leve'||trainDays<=1) score-=1;
+
+  // Stress e sono — corpo já sob pressão
+  if(stress==='muito-alto') score-=2;
+  if(stress==='alto')       score-=1;
+  if(sleepQ==='ma'||sleepQ==='insonia') score-=1;
+
+  // Experiência com jejum (das perguntas do onboarding)
+  if(a.exp==='never')   score-=2;
+  if(a.exp==='regular') score+=2;
+
+  // Objectivo
+  if(a.goal==='weight') score+=1;
+
+  // Estilo de vida
+  if(a.schedule==='social') {
+    // Social + score alto → 5:2 (escolhe os dias)
+    if(score>=2) return '5:2';
+    return '13h';
+  }
+
+  // Dieta cetogénica/low-carb já em cetose → beneficia de ADF
+  if((diet==='keto'||diet==='low-carb')&&a.exp==='regular') score+=1;
+
+  // Mapear score para plano
+  if(score<=0)  return '13h';
+  if(score<=2)  return '16:8';
+  if(score<=4)  return '5:2';
+  return 'ADF';
 }
 function renderPlanSourceCard(){
   const el=document.getElementById('planSourceCard');
