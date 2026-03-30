@@ -154,6 +154,28 @@ header{padding:50px 20px 12px;display:flex;align-items:flex-end;justify-content:
 .pd{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.4}
 .ptag{display:inline-block;margin-top:6px;padding:3px 7px;border-radius:20px;font-size:9px;background:rgba(79,255,176,.1);color:var(--accent)}
 
+/* ── ÁGUA ── */
+.water-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:15px;margin-bottom:0}
+.water-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.water-main{font-size:28px;font-weight:300;letter-spacing:-1px;line-height:1}
+.water-main span{font-size:11px;color:var(--muted);font-weight:400;display:block;margin-top:3px}
+.water-pct{text-align:right}
+.water-pct-val{font-size:17px;font-weight:600;color:var(--blue)}
+.water-pct-key{font-size:9px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-top:2px}
+.water-bar-wrap{height:7px;background:var(--s2);border-radius:4px;margin-bottom:13px;overflow:hidden}
+.water-bar-fill{height:100%;border-radius:4px;background:var(--blue);transition:width .5s ease;box-shadow:0 0 8px rgba(126,184,255,.35)}
+.water-cups{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:13px}
+.wcup{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--s2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:.2s;position:relative}
+.wcup.filled{background:rgba(126,184,255,.18);border-color:rgba(126,184,255,.4)}
+.wcup:active{transform:scale(.93)}
+.water-btns{display:flex;gap:8px}
+.water-btn{flex:1;padding:10px;border-radius:var(--rs);font-family:'Sora',sans-serif;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:.05em;transition:.2s;border:1px solid}
+.wb-add-w{background:rgba(126,184,255,.12);border-color:rgba(126,184,255,.3);color:var(--blue)}
+.wb-sub-w{background:var(--s2);border-color:var(--border);color:var(--muted)}
+.wb-add-w:active,.wb-sub-w:active{transform:scale(.97)}
+.water-hint{font-size:10px;color:var(--muted);margin-top:9px;line-height:1.55;padding:8px 10px;background:rgba(126,184,255,.04);border:1px solid rgba(126,184,255,.1);border-radius:var(--rs)}
+.water-hint strong{color:var(--blue)}
+
 /* ── HISTORIAL ── */
 .hist{display:flex;flex-direction:column;gap:6px}
 .hi{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:11px 14px;display:flex;justify-content:space-between;align-items:center}
@@ -357,6 +379,27 @@ nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-w
   <!-- ADAPTAÇÃO -->
   <div class="st">Estado do plano</div>
   <div id="adaptCard"></div>
+
+  <!-- ÁGUA -->
+  <div class="st">Hidratação hoje</div>
+  <div class="water-card" id="waterCard">
+    <div class="water-top">
+      <div>
+        <div class="water-main" id="waterMain">0 <span>ml bebidos</span></div>
+      </div>
+      <div class="water-pct">
+        <div class="water-pct-val" id="waterPct">0%</div>
+        <div class="water-pct-key">da meta</div>
+      </div>
+    </div>
+    <div class="water-bar-wrap"><div class="water-bar-fill" id="waterBarFill" style="width:0%"></div></div>
+    <div class="water-cups" id="waterCups"></div>
+    <div class="water-btns">
+      <button class="water-btn wb-sub-w" onclick="logWater(-250)">− 250 ml</button>
+      <button class="water-btn wb-add-w" onclick="logWater(250)">+ 250 ml</button>
+    </div>
+    <div class="water-hint" id="waterHint"></div>
+  </div>
 
   <!-- ADESÃO ÚLTIMOS 7 DIAS -->
   <div class="st">Últimos 7 dias</div>
@@ -764,6 +807,7 @@ let S={
   fasting:false,start:null,history:[],notif:false,
   weightLog:[],adherence:[],
   lastMeal:null,
+  water:{date:'',ml:0},
   nutriHours:null,
   reminder:{enabled:false,hour:20,min:0},
   profile:{age:'',height:'',famHist:'',health:'',meds:'',trainDays:[],trainTime:'',trainType:'',intensity:'',wake:'',sleep:'',sleepQ:'',stress:'',diet:'',alcohol:'',notes:''}
@@ -790,7 +834,7 @@ function init(){
   }catch(e){}
   if(S.nutriHours)buildNutriPlan(S.nutriHours);
   buildPlanGrid();buildInfoCards();loadPerfilUI();buildReminderUI();
-  reqNotif();renderAll();renderWeight();renderAdaptCard();renderAdherence();renderMealCard();
+  reqNotif();renderAll();renderWeight();renderAdaptCard();renderAdherence();renderMealCard();renderWater();
   renderPlanSourceCard();
   if(S.fasting&&S.start)startTick();
   if(S.reminder.enabled)scheduleReminder(false);
@@ -1274,6 +1318,67 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 init();
+
+// ════════════════════════════════
+// ÁGUA
+// ════════════════════════════════
+function calcWaterGoal(){
+  const w=S.weightLog.length?S.weightLog[0].val:70;
+  const trainDays=(S.profile.trainDays||[]).length;
+  const intensity=S.profile.intensity||'';
+  const fasting=S.fasting;
+  const plan=PLANS[S.plan]||PLANS['16:8'];
+  // Base: 35ml/kg
+  let ml=Math.round(w*35/50)*50;
+  // Treino intenso: +500ml nos dias de treino
+  if(intensity==='intensa'||intensity==='muito-intensa') ml+=500;
+  else if(intensity==='moderada'&&trainDays>=3) ml+=250;
+  // Jejum activo: +250ml (evitar confundir fome/sede)
+  if(fasting) ml+=250;
+  // Plano ADF/5:2 dias de restrição: +250ml
+  if(plan.fastH>=24) ml+=250;
+  return Math.max(1500,Math.min(4000,ml));
+}
+function waterTodayKey(){return dateKey(new Date());}
+function ensureWaterToday(){
+  if(S.water.date!==waterTodayKey()){S.water={date:waterTodayKey(),ml:0};save();}
+}
+function logWater(delta){
+  ensureWaterToday();
+  S.water.ml=Math.max(0,S.water.ml+delta);
+  save();renderWater();
+  if(delta>0){
+    const goal=calcWaterGoal();
+    if(S.water.ml>=goal) toast('Meta de hidratação atingida 💧');
+    else toast('+'+delta+'ml — '+(goal-S.water.ml)+'ml para a meta');
+  }
+}
+function renderWater(){
+  ensureWaterToday();
+  const goal=calcWaterGoal();
+  const ml=S.water.ml;
+  const pct=Math.min(100,Math.round(ml/goal*100));
+  const cups=Math.round(goal/250);
+  const filled=Math.round(ml/250);
+  document.getElementById('waterMain').innerHTML=ml+' <span>ml bebidos</span>';
+  document.getElementById('waterPct').textContent=pct+'%';
+  document.getElementById('waterBarFill').style.width=pct+'%';
+  // copos
+  const cupsEl=document.getElementById('waterCups');
+  cupsEl.innerHTML=Array.from({length:cups},(_,i)=>
+    `<div class="wcup${i<filled?' filled':''}" onclick="logWater(${i<filled?-250:250})">💧</div>`
+  ).join('');
+  // hint contextual
+  const hint=document.getElementById('waterHint');
+  const w=S.weightLog.length?S.weightLog[0].val:0;
+  let msg=`Meta: <strong>${goal} ml/dia</strong>`;
+  if(w) msg+=` · baseada no teu peso (${w} kg × 35 ml/kg)`;
+  if(S.fasting) msg+=` · +250 ml por estares em jejum`;
+  const trainDays=(S.profile.trainDays||[]).length;
+  if(trainDays>0&&(S.profile.intensity==='intensa'||S.profile.intensity==='muito-intensa')) msg+=` · +500 ml pelo treino intenso`;
+  if(pct>=100) msg='Muito bem — meta atingida! Beber além da meta só se sentires sede.';
+  hint.innerHTML=msg;
+}
 
 // ════════════════════════════════
 // ONBOARDING
