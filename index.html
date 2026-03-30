@@ -1139,6 +1139,12 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 init();
+
+// Redirecionar scroll de fora do contentor para o .scroll
+document.documentElement.addEventListener('wheel',function(e){
+  const sc=document.querySelector('.scroll');
+  if(sc&&!sc.contains(e.target)){e.preventDefault();sc.scrollTop+=e.deltaY;}
+},{passive:false});
 </script>
 </body>
 </html>
