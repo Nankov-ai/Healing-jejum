@@ -244,6 +244,50 @@ nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-w
 .cs-key{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:3px}
 .celebration-close{width:100%;padding:14px;background:var(--accent);color:#060a0e;border:none;border-radius:var(--r);font-family:'Sora',sans-serif;font-size:12px;letter-spacing:.14em;font-weight:600;cursor:pointer;transition:.2s}
 .celebration-close:active{transform:scale(.98)}
+
+/* ── ONBOARDING ── */
+.ob-bg{position:fixed;inset:0;background:rgba(8,12,16,.97);z-index:800;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
+.ob-bg.open{opacity:1;pointer-events:all}
+.ob-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r) var(--r) 0 0;padding:26px 22px 44px;width:100%;max-width:430px;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,.72,0,1);max-height:92vh;overflow-y:auto}
+.ob-bg.open .ob-card{transform:translateY(0)}
+.ob-step{display:none}.ob-step.active{display:block}
+.ob-progress{display:flex;gap:5px;margin-bottom:20px}
+.ob-dot{height:3px;border-radius:2px;background:var(--border);flex:1;transition:.3s}
+.ob-dot.done{background:var(--accent)}
+.ob-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin-bottom:5px}
+.ob-sub{font-size:11px;color:var(--muted);line-height:1.65;margin-bottom:18px}
+.ob-qlabel{font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:7px}
+.ob-choices{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
+.ob-choice{padding:13px 15px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);font-family:'Sora',sans-serif;font-size:12px;color:var(--text);cursor:pointer;text-align:left;transition:.2s;line-height:1.4}
+.ob-choice:active,.ob-choice.sel{border-color:var(--accent);background:rgba(79,255,176,.08);color:var(--accent)}
+.ob-choice small{display:block;font-size:10px;color:var(--muted);margin-top:2px}
+.ob-choice.sel small{color:rgba(79,255,176,.55)}
+.ob-hours-wrap{text-align:center;margin-bottom:16px}
+.ob-input{width:140px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:14px;font-family:'Sora',sans-serif;font-size:32px;color:var(--text);outline:none;text-align:center;transition:.2s}
+.ob-input:focus{border-color:rgba(79,255,176,.3)}
+.ob-input-hint{font-size:10px;color:var(--muted);margin-top:7px}
+.ob-next{width:100%;padding:15px;background:var(--accent);color:#060a0e;border:none;border-radius:var(--r);font-family:'Sora',sans-serif;font-size:12px;letter-spacing:.14em;font-weight:600;cursor:pointer;text-transform:uppercase;transition:.2s}
+.ob-next:active{transform:scale(.98)}
+.ob-next:disabled{opacity:.35;pointer-events:none}
+.ob-back{background:none;border:none;font-family:'Sora',sans-serif;font-size:11px;color:var(--muted);cursor:pointer;margin-top:11px;width:100%;text-align:center;padding:6px}
+.ob-result-plan{background:rgba(79,255,176,.07);border:1px solid rgba(79,255,176,.2);border-radius:var(--r);padding:18px;margin-bottom:16px;text-align:center}
+.ob-result-name{font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:var(--accent)}
+.ob-result-desc{font-size:11px;color:var(--soft);margin-top:5px;line-height:1.65}
+.ob-result-why{font-size:10px;color:var(--muted);margin-top:9px;line-height:1.6;font-style:italic;padding-top:9px;border-top:1px solid var(--border)}
+
+/* ── PLAN SOURCE CARD ── */
+.plan-src-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:15px;margin-bottom:10px}
+.plan-src-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:9px;font-weight:600}
+.badge-nutri{background:rgba(79,255,176,.1);color:var(--accent)}
+.badge-suggested{background:rgba(126,184,255,.1);color:var(--blue)}
+.badge-manual{background:rgba(179,157,255,.1);color:var(--purple)}
+.plan-src-name{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin-bottom:3px}
+.plan-src-sub{font-size:11px;color:var(--soft);line-height:1.5;margin-bottom:12px}
+.plan-src-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.plan-src-btn{padding:10px;border-radius:var(--rs);font-family:'Sora',sans-serif;font-size:10px;font-weight:600;cursor:pointer;letter-spacing:.05em;text-align:center;transition:.2s;border:1px solid}
+.plan-src-btn:active{transform:scale(.97)}
+.psb-nutri{background:rgba(79,255,176,.1);border-color:rgba(79,255,176,.25);color:var(--accent)}
+.psb-reconfig{background:var(--s2);border-color:var(--border);color:var(--soft)}
 </style>
 </head>
 <body>
@@ -351,7 +395,9 @@ nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-w
 
 <!-- ══ PERFIL ══ -->
 <div class="view" id="vPerfil">
-  <div class="st" style="margin-top:6px">Acompanhamento de peso</div>
+  <div class="st" style="margin-top:6px">Plano de jejum</div>
+  <div class="plan-src-card" id="planSourceCard"></div>
+  <div class="st">Acompanhamento de peso</div>
   <div class="weight-bar">
     <div class="wb-top">
       <div>
@@ -586,6 +632,80 @@ nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-w
 </div>
 
 
+<!-- ONBOARDING -->
+<div class="ob-bg" id="obBg">
+  <div class="ob-card">
+    <div class="ob-progress">
+      <div class="ob-dot done" id="obD1"></div>
+      <div class="ob-dot" id="obD2"></div>
+      <div class="ob-dot" id="obD3"></div>
+    </div>
+
+    <!-- PASSO 1: origem do plano -->
+    <div class="ob-step active" id="obS1">
+      <div class="ob-title">Bem-vindo ao Jejum</div>
+      <div class="ob-sub">Para configurar o teu plano, diz-nos de onde partes.</div>
+      <div class="ob-choices">
+        <button class="ob-choice" data-src="nutritionist" onclick="obPickSrc(this)">Tenho plano de nutricionista<small>Introduzo as horas prescritas</small></button>
+        <button class="ob-choice" data-src="suggested" onclick="obPickSrc(this)">Não tenho — sugere-me um<small>A app analisa o meu perfil e recomenda</small></button>
+        <button class="ob-choice" data-src="soon" onclick="obPickSrc(this)">Vou ter plano em breve<small>A app sugere agora, mudo quando tiver o plano</small></button>
+      </div>
+      <button class="ob-next" id="obNext1" disabled onclick="obGoStep2()">Continuar</button>
+    </div>
+
+    <!-- PASSO 2A: horas do nutricionista -->
+    <div class="ob-step" id="obS2A">
+      <div class="ob-title">Plano do nutricionista</div>
+      <div class="ob-sub">Quantas horas de jejum foram prescritas?</div>
+      <div class="ob-hours-wrap">
+        <input type="number" class="ob-input" id="obHours" min="10" max="36" placeholder="16" oninput="obCheckHours()"/>
+        <div class="ob-input-hint">Horas de jejum por dia (ex: 13, 14, 16, 18)</div>
+      </div>
+      <button class="ob-next" id="obNext2A" disabled onclick="obConfirmNutri()">Confirmar plano</button>
+      <button class="ob-back" onclick="obGoStep1()">← Voltar</button>
+    </div>
+
+    <!-- PASSO 2B: perguntas para sugestão -->
+    <div class="ob-step" id="obS2B">
+      <div class="ob-title">Conhece-te melhor</div>
+      <div class="ob-sub">3 perguntas para recomendar o plano certo.</div>
+      <div class="ob-qlabel">Experiência com jejum intermitente</div>
+      <div class="ob-choices">
+        <button class="ob-choice" data-q="exp" data-v="never" onclick="obPick(this)">Nunca fiz<small>É a primeira vez</small></button>
+        <button class="ob-choice" data-q="exp" data-v="some" onclick="obPick(this)">Algumas vezes<small>Já experimentei mas não é hábito</small></button>
+        <button class="ob-choice" data-q="exp" data-v="regular" onclick="obPick(this)">Faço regularmente<small>Já é parte da minha rotina</small></button>
+      </div>
+      <div class="ob-qlabel">Objectivo principal</div>
+      <div class="ob-choices">
+        <button class="ob-choice" data-q="goal" data-v="health" onclick="obPick(this)">Saúde e prevenção<small>Reduzir riscos a longo prazo</small></button>
+        <button class="ob-choice" data-q="goal" data-v="weight" onclick="obPick(this)">Perder peso<small>Redução de massa gorda</small></button>
+        <button class="ob-choice" data-q="goal" data-v="energy" onclick="obPick(this)">Energia e bem-estar<small>Foco, clareza mental, disposição</small></button>
+      </div>
+      <div class="ob-qlabel">Estilo de vida</div>
+      <div class="ob-choices" style="margin-bottom:18px">
+        <button class="ob-choice" data-q="schedule" data-v="structured" onclick="obPick(this)">Horário fixo<small>Como sempre às mesmas horas</small></button>
+        <button class="ob-choice" data-q="schedule" data-v="social" onclick="obPick(this)">Muito social<small>Jantares fora, viagens, horários variáveis</small></button>
+        <button class="ob-choice" data-q="schedule" data-v="flexible" onclick="obPick(this)">Flexível<small>Varia mas tenho algum controlo</small></button>
+      </div>
+      <button class="ob-next" id="obNext2B" disabled onclick="obGoStep3()">Ver recomendação</button>
+      <button class="ob-back" onclick="obGoStep1()">← Voltar</button>
+    </div>
+
+    <!-- PASSO 3: resultado -->
+    <div class="ob-step" id="obS3">
+      <div class="ob-title">O teu plano</div>
+      <div class="ob-sub" id="obResultSub"></div>
+      <div class="ob-result-plan">
+        <div class="ob-result-name" id="obResultName">—</div>
+        <div class="ob-result-desc" id="obResultDesc"></div>
+        <div class="ob-result-why" id="obResultWhy"></div>
+      </div>
+      <button class="ob-next" onclick="obConfirm()">Começar com este plano</button>
+      <button class="ob-back" onclick="obGoStep2Back()">← Escolher outro</button>
+    </div>
+  </div>
+</div>
+
 <nav>
   <button class="nb active" id="nbTimer"  onclick="sw('Timer')"> <div class="ni">◎</div><div class="nl">Jejum</div></button>
   <button class="nb"        id="nbPerfil" onclick="sw('Perfil')"><div class="ni">◑</div><div class="nl">Perfil</div></button>
@@ -640,9 +760,11 @@ const MOTIVOS_PARTIAL=[
 // STATE
 // ════════════════════════════════
 let S={
-  plan:'16:8',fasting:false,start:null,history:[],notif:false,
+  plan:'16:8',planSource:'manual',onboarded:false,
+  fasting:false,start:null,history:[],notif:false,
   weightLog:[],adherence:[],
   lastMeal:null,
+  nutriHours:null,
   reminder:{enabled:false,hour:20,min:0},
   profile:{age:'',height:'',famHist:'',health:'',meds:'',trainDays:[],trainTime:'',trainType:'',intensity:'',wake:'',sleep:'',sleepQ:'',stress:'',diet:'',alcohol:'',notes:''}
 };
@@ -656,12 +778,24 @@ let motivoSel=null;
 // ════════════════════════════════
 function init(){
   if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
-  try{const r=localStorage.getItem('j_v5');if(r){const p=JSON.parse(r);S={...S,...p};if(S.start)S.start=new Date(S.start);}}catch(e){}
+  try{
+    const r=localStorage.getItem('j_v5');
+    if(r){
+      const p=JSON.parse(r);
+      S={...S,...p};
+      if(S.start)S.start=new Date(S.start);
+      // Utilizadores existentes (sem flag onboarded) com historial → não mostrar onboarding
+      if(!('onboarded' in p)&&(p.history?.length||p.plan!=='16:8')){S.onboarded=true;S.planSource=S.planSource||'manual';}
+    }
+  }catch(e){}
+  if(S.nutriHours)buildNutriPlan(S.nutriHours);
   buildPlanGrid();buildInfoCards();loadPerfilUI();buildReminderUI();
   reqNotif();renderAll();renderWeight();renderAdaptCard();renderAdherence();renderMealCard();
+  renderPlanSourceCard();
   if(S.fasting&&S.start)startTick();
   if(S.reminder.enabled)scheduleReminder(false);
   startMealElapsedTick();
+  if(!S.onboarded)setTimeout(openOnboarding,700);
 }
 function save(){localStorage.setItem('j_v5',JSON.stringify(S));}
 
@@ -1140,6 +1274,121 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 init();
+
+// ════════════════════════════════
+// ONBOARDING
+// ════════════════════════════════
+let obSrc=null,obAnswers={},obResultPlan=null;
+
+function buildNutriPlan(h){
+  PLANS['nutri']={
+    id:'nutri',name:h+'h',sub:'Plano nutricionista',fastH:h,tag:'Prescrito',
+    desc:h+'h de jejum · prescrito por nutricionista.',
+    why:'Protocolo personalizado definido pelo teu profissional de saúde.',
+    mechs:['Protocolo adaptado ao teu estado de saúde','Supervisão profissional','Progressão segura e gradual'],
+    src:'Plano personalizado',
+    phases:[{h:0,l:'Início'},{h:Math.round(h*.3),l:'Transição'},{h:Math.round(h*.6),l:'Queima'},{h:Math.round(h*.85),l:'Autofagia'},{h:h,l:'Completo ✓'}]
+  };
+}
+function openOnboarding(){
+  obSrc=null;obAnswers={};obResultPlan=null;
+  document.querySelectorAll('.ob-choice').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('obHours').value='';
+  document.getElementById('obNext1').disabled=true;
+  document.getElementById('obNext2A').disabled=true;
+  document.getElementById('obNext2B').disabled=true;
+  obShowStep('obS1');
+  document.getElementById('obBg').classList.add('open');
+}
+function openNutriOnboarding(){
+  obSrc='nutritionist';
+  openOnboarding();
+  obShowStep('obS2A');
+}
+function closeOnboarding(){document.getElementById('obBg').classList.remove('open');}
+function obShowStep(id){
+  document.querySelectorAll('.ob-step').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const map={obS1:0,obS2A:1,obS2B:1,obS3:2};
+  const idx=map[id]??0;
+  ['obD1','obD2','obD3'].forEach((d,i)=>document.getElementById(d).classList.toggle('done',i<=idx));
+}
+function obPickSrc(btn){
+  document.querySelectorAll('[data-src]').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  obSrc=btn.dataset.src;
+  document.getElementById('obNext1').disabled=false;
+}
+function obPick(btn){
+  const q=btn.dataset.q;
+  document.querySelectorAll(`[data-q="${q}"]`).forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  obAnswers[q]=btn.dataset.v;
+  document.getElementById('obNext2B').disabled=!(obAnswers.exp&&obAnswers.goal&&obAnswers.schedule);
+}
+function obCheckHours(){
+  const v=parseInt(document.getElementById('obHours').value);
+  document.getElementById('obNext2A').disabled=!(v>=10&&v<=36);
+}
+function obGoStep1(){obShowStep('obS1');}
+function obGoStep2(){
+  obShowStep(obSrc==='nutritionist'?'obS2A':'obS2B');
+}
+function obGoStep2Back(){obShowStep(obSrc==='nutritionist'?'obS2A':'obS2B');}
+function obGoStep3(){
+  obResultPlan=suggestPlan(obAnswers);
+  const pl=PLANS[obResultPlan];
+  const srcLabel=obSrc==='soon'?'Sugestão temporária (podes mudar quando tiveres plano do nutricionista)':'Baseado no teu perfil, recomendamos:';
+  document.getElementById('obResultSub').textContent=srcLabel;
+  document.getElementById('obResultName').textContent=pl.name;
+  document.getElementById('obResultDesc').textContent=pl.desc;
+  document.getElementById('obResultWhy').textContent=pl.why;
+  obShowStep('obS3');
+}
+function obConfirmNutri(){
+  const h=parseInt(document.getElementById('obHours').value);
+  buildNutriPlan(h);
+  S.nutriHours=h;S.plan='nutri';S.planSource='nutritionist';S.onboarded=true;
+  save();buildPlanGrid();renderPlanSourceCard();
+  document.getElementById('chipLabel').textContent=PLANS['nutri'].name;
+  closeOnboarding();
+  toast('Plano do nutricionista configurado — '+h+'h ✓');
+}
+function obConfirm(){
+  S.plan=obResultPlan;
+  S.planSource=obSrc==='soon'?'soon':'suggested';
+  S.onboarded=true;
+  save();buildPlanGrid();renderPlanSourceCard();
+  document.getElementById('chipLabel').textContent=PLANS[obResultPlan].name;
+  closeOnboarding();
+  toast('Plano '+PLANS[obResultPlan].name+' activo ✓');
+}
+function suggestPlan(a){
+  if(a.exp==='never') return '13h';
+  if(a.schedule==='social') return '5:2';
+  if(a.exp==='regular'&&a.goal==='weight') return 'ADF';
+  return '16:8';
+}
+function renderPlanSourceCard(){
+  const el=document.getElementById('planSourceCard');
+  if(!el)return;
+  const pl=PLANS[S.plan]||PLANS['16:8'];
+  const srcMap={
+    nutritionist:{label:'Nutricionista',cls:'badge-nutri',desc:'Plano prescrito pelo teu nutricionista.'},
+    suggested:   {label:'Sugerido pela app',cls:'badge-suggested',desc:'Plano recomendado com base no teu perfil.'},
+    soon:        {label:'Temporário',cls:'badge-suggested',desc:'Sugestão temporária — actualiza quando tiveres o plano do nutricionista.'},
+    manual:      {label:'Manual',cls:'badge-manual',desc:'Plano seleccionado manualmente.'}
+  };
+  const src=srcMap[S.planSource||'manual']||srcMap.manual;
+  el.innerHTML=`
+    <div class="plan-src-badge ${src.cls}">${src.label}</div>
+    <div class="plan-src-name">${pl.name} <span style="font-family:'Sora';font-size:12px;font-weight:400;color:var(--soft)">${pl.sub||''}</span></div>
+    <div class="plan-src-sub">${src.desc}</div>
+    <div class="plan-src-row">
+      <button class="plan-src-btn psb-nutri" onclick="openNutriOnboarding()">Tenho plano do nutricionista</button>
+      <button class="plan-src-btn psb-reconfig" onclick="openOnboarding()">Reconfigurar plano</button>
+    </div>`;
+}
 
 // Redirecionar scroll de fora do contentor para o .scroll
 document.documentElement.addEventListener('wheel',function(e){
