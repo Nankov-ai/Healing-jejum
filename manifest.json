@@ -1,6 +1,6 @@
 {
-  "name": "Jejum — Intermitente",
-  "short_name": "Jejum",
+  "name": "HealHour",
+  "short_name": "HealHour",
   "description": "Temporizador de jejum intermitente pessoal",
   "start_url": "/index.html",
   "display": "standalone",
